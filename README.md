@@ -5,7 +5,8 @@ Shopify storefront project.
 ## Status
 
 - ✅ Repository connected and writable from Claude Code
-- ⏳ Shopify integration: pending (see notes below)
+- ✅ Valid Shopify theme on this branch (based on Shopify Dawn v15.5.0)
+- ⏳ Connect this branch to a theme in Shopify admin (see below)
 
 ## Connecting this repo to Shopify
 
