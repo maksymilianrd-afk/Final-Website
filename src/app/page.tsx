@@ -9,6 +9,7 @@ import { Scene08Reviews } from "@/components/scenes/Scene08Reviews";
 import { Scene09HowTo } from "@/components/scenes/Scene09HowTo";
 import { Scene10Faq } from "@/components/scenes/Scene10Faq";
 import { Scene11Final } from "@/components/scenes/Scene11Final";
+import { StageMount } from "@/components/stage/StageMount";
 import { getProduct } from "@/lib/shopify";
 
 export const revalidate = 3600;
@@ -44,6 +45,7 @@ export default async function Home() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
+      <StageMount />
       <Scene01Hero />
       <Scene02Problem />
       <Scene03Turn />

@@ -25,7 +25,10 @@ export function pickTier(): Promise<Tier> {
   cached ??= (async (): Promise<Tier> => {
     if (!hasWebGL()) return "none"; // poster-frame site, no GLB fetch
     try {
-      const { tier, isMobile } = await getGPUTier();
+      // benchmark data self-hosted — no CDN dependency
+      const { tier, isMobile } = await getGPUTier({
+        benchmarksURL: "/gpu-benchmarks",
+      });
       const lowMem = (navigator.deviceMemory ?? 8) <= 4;
       return isMobile || tier < 2 || lowMem ? "mobile" : "desktop";
     } catch {

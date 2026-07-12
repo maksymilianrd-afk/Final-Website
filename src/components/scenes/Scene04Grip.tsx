@@ -37,7 +37,8 @@ export function Scene04Grip() {
   return (
     <section
       aria-label="Engineering — the clamp"
-      className="relative overflow-hidden bg-bone-deep px-6 py-28 md:px-12 md:py-40"
+      data-scene="04"
+      className="scene-surface overflow-hidden bg-bone-deep px-6 py-28 md:px-12 md:py-40"
     >
       <SceneNumeral n="04" />
       <div className="mx-auto w-full max-w-6xl">

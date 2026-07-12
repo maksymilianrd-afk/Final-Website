@@ -28,7 +28,8 @@ export function Scene06CatLogic() {
   return (
     <section
       aria-label="Will my cat actually use it?"
-      className="relative bg-bone px-6 py-28 md:px-12 md:py-40"
+      data-scene="06"
+      className="scene-surface bg-bone px-6 py-28 md:px-12 md:py-40"
     >
       <div className="mx-auto grid w-full max-w-6xl gap-16 md:grid-cols-[5fr_7fr]">
         <div className="md:sticky md:top-32 md:self-start">

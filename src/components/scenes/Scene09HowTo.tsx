@@ -18,7 +18,8 @@ export function Scene09HowTo() {
   return (
     <section
       aria-label="How it works"
-      className="relative bg-bone px-6 py-28 md:px-12 md:py-40"
+      data-scene="09"
+      className="scene-surface bg-bone px-6 py-28 md:px-12 md:py-40"
     >
       <div className="mx-auto grid w-full max-w-6xl items-center gap-14 md:grid-cols-2">
         <Reveal>

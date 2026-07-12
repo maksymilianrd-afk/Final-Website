@@ -11,7 +11,8 @@ export function Scene07Mirror() {
   return (
     <section
       aria-label="5:12 PM, revisited — the resolution"
-      className="on-night relative overflow-hidden bg-night px-6 py-32 text-bone md:px-12 md:py-44"
+      data-scene="07"
+      className="on-night scene-surface overflow-hidden bg-night px-6 py-32 text-bone md:px-12 md:py-44"
     >
       {/* the evening film underlays the type once HF-V07 lands */}
       <div aria-hidden className="absolute inset-0 opacity-40" data-stage="evening">

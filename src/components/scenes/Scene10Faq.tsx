@@ -47,7 +47,7 @@ export function Scene10Faq() {
     <section
       id="scene-10"
       aria-label="FAQ"
-      className="bg-bone px-6 py-28 md:py-36"
+      className="scene-surface bg-bone px-6 py-28 md:py-36"
     >
       <div className="mx-auto w-full max-w-[680px]">
         <h2 className="font-display text-[clamp(2rem,4vw,3rem)] font-bold tracking-tighter">

@@ -34,7 +34,7 @@ export function Scene08Reviews() {
     <section
       id="scene-08"
       aria-label="Reviews"
-      className="relative overflow-hidden bg-bone-deep py-28 md:py-36"
+      className="scene-surface overflow-hidden bg-bone-deep py-28 md:py-36"
     >
       <Reveal className="mx-auto max-w-6xl px-6 md:px-12">
         <h2 className="font-display text-xl font-bold tracking-tight text-ink/70">

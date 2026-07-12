@@ -2,13 +2,14 @@ import { MEDIA } from "@/lib/media";
 import { CtaButton } from "../ui/CtaButton";
 import { MediaSlot } from "../ui/MediaSlot";
 import { MaskedLine, Reveal } from "../ui/Reveal";
+import { StageAware } from "../ui/StageAware";
 
 export function Scene01Hero() {
   return (
     <section
       id="top"
       aria-label="DeskPaws"
-      className="relative flex min-h-svh items-center overflow-hidden bg-bone px-6 pt-24 pb-16 md:px-12"
+      className="scene-surface flex min-h-svh items-center overflow-hidden bg-bone px-6 pt-24 pb-16 md:px-12"
     >
       <div className="mx-auto grid w-full max-w-6xl items-center gap-12 md:grid-cols-2">
         <Reveal className="order-2 md:order-1">
@@ -28,14 +29,17 @@ export function Scene01Hero() {
           </div>
         </Reveal>
 
-        {/* The stage: Phase 2 mounts the persistent WebGL actor here.
-            Until then, the HF-P01 poster holds the exact composition. */}
+        {/* The live actor renders on the fixed canvas behind this column;
+            the HF-P01 poster holds the composition until the GLB is ready
+            and whenever the stage can't mount (Static Cut). */}
         <div className="order-1 md:order-2" data-stage="hero">
-          <MediaSlot
-            asset={MEDIA.heroPoster}
-            className="w-full"
-            sizes="(min-width: 768px) 58vw, 100vw"
-          />
+          <StageAware>
+            <MediaSlot
+              asset={MEDIA.heroPoster}
+              className="w-full"
+              sizes="(min-width: 768px) 58vw, 100vw"
+            />
+          </StageAware>
         </div>
       </div>
 

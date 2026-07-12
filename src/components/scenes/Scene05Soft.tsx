@@ -10,7 +10,8 @@ export function Scene05Soft() {
   return (
     <section
       aria-label="The soft half — fabric and comfort"
-      className="relative bg-night"
+      data-scene="05"
+      className="scene-surface bg-night"
     >
       <div className="relative" data-stage="fur-matchcut">
         <MediaSlot asset={MEDIA.furMacro} className="w-full" />

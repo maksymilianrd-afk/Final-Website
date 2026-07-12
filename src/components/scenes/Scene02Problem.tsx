@@ -9,7 +9,8 @@ export function Scene02Problem() {
   return (
     <section
       aria-label="4:47 PM, Tuesday — the problem"
-      className="on-night relative overflow-hidden bg-night px-6 py-32 text-bone md:px-12 md:py-44"
+      data-scene="02"
+      className="on-night scene-surface overflow-hidden bg-night px-6 py-32 text-bone md:px-12 md:py-44"
     >
       {/* desk-life debris, 15% opacity, never legible enough to actually read */}
       <div aria-hidden className="pointer-events-none absolute inset-0 select-none">

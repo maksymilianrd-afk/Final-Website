@@ -20,7 +20,7 @@ export function Scene11Final({ product }: { product: ProductInfo }) {
     <section
       id="product-cta"
       aria-label="Get DeskPaws"
-      className="relative bg-bone px-6 pb-10 pt-28 md:pt-40"
+      className="scene-surface bg-bone px-6 pb-10 pt-28 md:pt-40"
     >
       <div className="mx-auto flex w-full max-w-3xl flex-col items-center text-center">
         <div className="w-full max-w-xl" data-stage="lastframe">

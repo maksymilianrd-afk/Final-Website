@@ -1,5 +1,6 @@
 import { SceneNumeral } from "../ui/SceneNumeral";
 import { MaskedLine, Reveal } from "../ui/Reveal";
+import { StageAware } from "../ui/StageAware";
 import { StaticFrame } from "../ui/StaticFrame";
 
 /**
@@ -11,16 +12,18 @@ export function Scene03Turn() {
     <section
       id="scene-03"
       aria-label="Meet DeskPaws"
-      className="relative overflow-hidden bg-bone px-6 py-28 md:px-12 md:py-40"
+      className="scene-surface overflow-hidden bg-bone px-6 py-28 md:px-12 md:py-40"
     >
       <SceneNumeral n="03" side="left" />
       <div className="mx-auto grid w-full max-w-6xl items-center gap-12 md:grid-cols-2">
         <div data-stage="dock">
-          <StaticFrame
-            id="scene03"
-            alt="The DeskPaws clamp docking onto a walnut desk edge"
-            aspect={4 / 3}
-          />
+          <StageAware>
+            <StaticFrame
+              id="scene03"
+              alt="The DeskPaws clamp docking onto a walnut desk edge"
+              aspect={4 / 3}
+            />
+          </StageAware>
         </div>
         <Reveal>
           <h2 className="font-display text-[clamp(2.2rem,4.5vw,3.8rem)] font-bold leading-[0.95] tracking-tighter">

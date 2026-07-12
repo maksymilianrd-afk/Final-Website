@@ -197,6 +197,17 @@ details.faq[open]::details-content {
   }
 }
 
+/* ── The stage (Phase 2): sections ride at z-20 above the fixed canvas
+   (z-10) and background director (z-0). When the stage is live, section
+   backgrounds go transparent and the director paints the scene color. ── */
+.scene-surface {
+  position: relative;
+  z-index: 20;
+}
+body.stage-on .scene-surface {
+  background-color: transparent;
+}
+
 /* ── Focus: visible, ink, never removed ── */
 :focus-visible {
   outline: 2px solid var(--color-ink);
