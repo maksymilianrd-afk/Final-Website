@@ -1,0 +1,207 @@
+@import "tailwindcss";
+
+@theme {
+  /* ── Locked palette (01_CREATIVE_DIRECTION §1.1 — never deviate) ── */
+  --color-bone: #ede7de;
+  --color-bone-deep: #e3dacc;
+  --color-walnut: #6b4f3a;
+  --color-ink: #141210;
+  --color-plush: #c9c9c7;
+  --color-night: #0e0f14;
+  --color-signal: #2f5d50;
+
+  /* ── Type system ── */
+  --font-display: var(--font-archivo), system-ui, sans-serif;
+  --font-sans: var(--font-geist-sans), system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+
+  /* ── The two easings (sitewide — no others) ── */
+  --ease-camera: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-mech: cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+/* Display face runs wide: Archivo variable width axis stands in for
+   Söhne Breit until PP Neue Montreal is licensed. */
+.font-display {
+  font-variation-settings: "wdth" 120;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+body {
+  background: var(--color-bone);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: var(--color-ink);
+  color: var(--color-bone);
+}
+
+/* ── Technical mono labels (the only small-caps treatment on the site) ── */
+@utility mono-label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+}
+
+/* ── ink hairline color; pair with border/border-t/border-y for width ── */
+@utility hairline {
+  border-color: color-mix(in srgb, var(--color-ink) 24%, transparent);
+}
+
+/* ── Giant slate numerals (barely darker than the background) ── */
+@utility slate-numeral {
+  font-family: var(--font-display);
+  font-variation-settings: "wdth" 125;
+  font-weight: 700;
+  font-size: 20vw;
+  line-height: 1;
+  color: var(--color-plush);
+  opacity: 0.35;
+  user-select: none;
+  pointer-events: none;
+}
+
+/* ── Film grain: static 3% noise on a fixed, non-interactive layer ── */
+.grain::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  pointer-events: none;
+  opacity: 0.03;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 240px 240px;
+}
+
+/* ── Masked line reveal (CSS-only for the Static Cut; GSAP takes over in Phase 4) ── */
+@keyframes line-rise {
+  from {
+    transform: translateY(110%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+.masked-line {
+  overflow: hidden;
+  display: block;
+}
+.masked-line > span {
+  display: block;
+  transform: translateY(110%);
+}
+.in-view .masked-line > span {
+  animation: line-rise 0.8s var(--ease-camera) forwards;
+  animation-delay: calc(var(--line-index, 0) * 60ms);
+}
+
+/* ── Scroll cue: the dripping line ── */
+@keyframes drip {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(12px);
+  }
+}
+.scroll-drip {
+  animation: drip 2.4s var(--ease-camera) infinite;
+}
+
+/* ── Deadpan blinking cursor (Scene 02) ── */
+@keyframes blink {
+  0%,
+  49% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+.cursor-blink {
+  animation: blink 1.1s step-start infinite;
+}
+
+/* ── FAQ disclosure ── */
+details.faq summary::-webkit-details-marker {
+  display: none;
+}
+details.faq .faq-plus {
+  transition: transform 350ms var(--ease-mech);
+}
+details.faq[open] .faq-plus {
+  transform: rotate(90deg);
+}
+details.faq::details-content {
+  block-size: 0;
+  overflow: hidden;
+  transition:
+    block-size 350ms var(--ease-mech),
+    content-visibility 350ms allow-discrete;
+}
+details.faq[open]::details-content {
+  block-size: auto;
+}
+@supports (interpolate-size: allow-keywords) {
+  :root {
+    interpolate-size: allow-keywords;
+  }
+}
+
+/* ── Reviews rail: native drag-scroll, hide scrollbar, snap ── */
+.rail {
+  scrollbar-width: none;
+  scroll-snap-type: x proximity;
+}
+.rail::-webkit-scrollbar {
+  display: none;
+}
+.rail > li {
+  scroll-snap-align: start;
+}
+
+/* ── Reduced motion: everything decorative stops dead ── */
+@media (prefers-reduced-motion: reduce) {
+  .masked-line > span {
+    transform: none !important;
+    animation: none !important;
+  }
+  .scroll-drip,
+  .cursor-blink {
+    animation: none !important;
+  }
+  details.faq::details-content,
+  details.faq .faq-plus {
+    transition: none !important;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ── Focus: visible, ink, never removed ── */
+:focus-visible {
+  outline: 2px solid var(--color-ink);
+  outline-offset: 3px;
+}
+.on-night :focus-visible {
+  outline-color: var(--color-bone);
+}
