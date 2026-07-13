@@ -1,10 +1,10 @@
 {
   "current": {
     "enable_stage": true,
-    "model_base_url": "https://cdn.jsdelivr.net/gh/maksymilianrd-afk/Final-Website@assets-v1/models",
+    "model_base_url": "https://cdn.jsdelivr.net/gh/maksymilianrd-afk/Final-Website@c01b35771ffdeefce30ebfa73171e600fda95f5b/models",
     "fur_level": "c",
-    "media_v06b": "https://cdn.jsdelivr.net/gh/maksymilianrd-afk/Final-Website@assets-v1/models/HF-V06b.mp4",
-    "media_v06c": "https://cdn.jsdelivr.net/gh/maksymilianrd-afk/Final-Website@assets-v1/models/HF-V06c.mp4"
+    "media_v06b": "https://cdn.jsdelivr.net/gh/maksymilianrd-afk/Final-Website@c01b35771ffdeefce30ebfa73171e600fda95f5b/models/HF-V06b.mp4",
+    "media_v06c": "https://cdn.jsdelivr.net/gh/maksymilianrd-afk/Final-Website@c01b35771ffdeefce30ebfa73171e600fda95f5b/models/HF-V06c.mp4"
   },
   "presets": {
     "DeskPaws": {

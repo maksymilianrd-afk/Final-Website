@@ -33,7 +33,7 @@
         "id": "model_base_url",
         "label": "Model + texture base URL",
         "info": "Folder holding deskpaws_desktop_FINAL.glb, deskpaws_mobile_FINAL.glb and fur_gray_*.webp. Defaults to the public repo via jsDelivr; you can point it at a Shopify Files folder.",
-        "default": "https://cdn.jsdelivr.net/gh/maksymilianrd-afk/Final-Website@assets-v1/models"
+        "default": "https://cdn.jsdelivr.net/gh/maksymilianrd-afk/Final-Website@c01b35771ffdeefce30ebfa73171e600fda95f5b/models"
       },
       {
         "type": "select",
