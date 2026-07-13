@@ -26,6 +26,11 @@
   font-variation-settings: "wdth" 120;
 }
 
+/* The ink handwriting voice — Caveat (OFL), only ever ≤14px (§1.5.3) */
+.font-ink {
+  font-family: "Caveat", cursive;
+}
+
 html {
   scroll-behavior: smooth;
 }
@@ -72,6 +77,24 @@ body {
   opacity: 0.35;
   user-select: none;
   pointer-events: none;
+}
+
+/* ── Atmosphere (§1.6): light has temperature and direction — a barely
+   perceptible warm pool from the key-light corner, upper-left. Sits above
+   content, below grain; soft-light keeps it luminance-only. ── */
+.grain::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 45;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse 90% 70% at 20% 12%,
+    rgba(255, 243, 226, 0.5),
+    rgba(255, 243, 226, 0.12) 45%,
+    transparent 70%
+  );
+  mix-blend-mode: soft-light;
 }
 
 /* ── Film grain: static 3% noise on a fixed, non-interactive layer ── */

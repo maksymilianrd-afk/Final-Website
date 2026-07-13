@@ -1,14 +1,28 @@
 /**
  * The ONLY place GLB node names appear as strings (build spec §2, DoD).
- * Names are the binding contract with the shipped assets — verified against
- * both FINAL GLBs (see docs/06_FINAL_VALIDATION_REPORT.md).
+ *
+ * IMPORTANT: three.js GLTFLoader sanitizes node names on import via
+ * PropertyBinding.sanitizeNodeName — spaces become underscores and dots are
+ * stripped. The names below are the RUNTIME names; the authored names from
+ * 02_3D_MODEL_SPEC §2 are kept alongside for traceability:
+ *
+ *   authored (GLB)          runtime (three.js)
+ *   ─────────────────────   ──────────────────
+ *   product_root            product_root
+ *   Basket Top              Basket_Top
+ *   Basket Bottom           Basket_Bottom
+ *   Base Structure.001      Base_Structure001
+ *   Screw.001               Screw001
+ *   Plane (desktop only)    Plane
+ *   desk_proxy / Desk       desk_proxy / Desk
+ *   annotation_01..04       annotation_01..04
  */
 export const NODE = {
   root: "product_root",
-  top: "Basket Top",
-  bottom: "Basket Bottom",
-  base: "Base Structure.001",
-  screw: "Screw.001",
+  top: "Basket_Top",
+  bottom: "Basket_Bottom",
+  base: "Base_Structure001",
+  screw: "Screw001",
   /** DESKTOP TIER ONLY — always access via optional lookup. */
   fur: "Plane",
   deskProxy: "desk_proxy",

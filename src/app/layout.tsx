@@ -4,6 +4,7 @@ import { GeistMono } from "geist/font/mono";
 import localFont from "next/font/local";
 import { Nav } from "@/components/ui/Nav";
 import { CartToast } from "@/components/ui/CartToast";
+import "@fontsource/caveat/500.css"; // the ink handwriting voice (§1.5, ≤14px)
 import "./globals.css";
 
 /** Display grotesk: Archivo variable (wdth+wght axes) stands in for

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Canvas } from "@react-three/fiber";
+import * as THREE from "three";
 import { pickTier, preloadModel, type Tier } from "@/lib/gpuTier";
 import { SCENE_BG } from "@/lib/poses";
 import { computePose } from "@/lib/poses";
@@ -80,8 +81,15 @@ export function StageRoot() {
       >
         <Canvas
           gl={{ antialias: true, alpha: true }}
-          dpr={[1, 2]}
-          camera={{ fov: 35, near: 0.01, far: 20, position: [-0.38, 0.16, -0.46] }}
+          dpr={[1.5, 2]} // §3.5.6a — fur needs DPR ≥ 1.5
+          shadows="soft"
+          camera={{ fov: 35, near: 0.01, far: 20, position: [-0.28, 0.22, -1.02] }}
+          onCreated={({ gl }) => {
+            // §3.5.1 — rendering contract
+            gl.toneMapping = THREE.ACESFilmicToneMapping;
+            gl.outputColorSpace = THREE.SRGBColorSpace;
+            gl.toneMappingExposure = 1.05;
+          }}
         >
           <StageScene tier={tier} />
         </Canvas>
