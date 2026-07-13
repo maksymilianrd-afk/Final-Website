@@ -1,0 +1,18 @@
+<section class="scene scene-surface" style="padding-top:8rem">
+  <div class="scene__inner" style="max-width:680px">
+    <h1 class="h2">Search</h1>
+    <form action="{{ routes.search_url }}" method="get" style="margin-top:2rem">
+      <input type="search" name="q" value="{{ search.terms | escape }}" placeholder="Search"
+        style="width:100%;padding:1rem;border:1px solid var(--hairline);border-radius:.5rem;font:inherit;background:transparent">
+    </form>
+    {%- if search.performed -%}
+      <div style="margin-top:2rem">
+        {%- for item in search.results -%}
+          <p style="padding:1rem 0;border-top:1px solid var(--hairline)"><a href="{{ item.url }}">{{ item.title }}</a></p>
+        {%- else -%}
+          <p class="lead">No results.</p>
+        {%- endfor -%}
+      </div>
+    {%- endif -%}
+  </div>
+</section>

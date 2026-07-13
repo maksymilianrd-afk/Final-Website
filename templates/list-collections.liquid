@@ -1,0 +1,15 @@
+<section class="scene scene-surface" style="padding-top:8rem">
+  <div class="scene__inner">
+    <h1 class="h2">Collections</h1>
+    <div style="margin-top:3rem;display:grid;grid-template-columns:repeat(auto-fill,minmax(16rem,1fr));gap:2rem">
+      {%- for collection in collections -%}
+        <a href="{{ collection.url }}">
+          <div class="media-slot" style="aspect-ratio:4/3">
+            <img src="{{ collection.featured_image | image_url: width: 600 }}" alt="{{ collection.title | escape }}" loading="lazy">
+          </div>
+          <p style="margin-top:.75rem;font-weight:500">{{ collection.title }}</p>
+        </a>
+      {%- endfor -%}
+    </div>
+  </div>
+</section>

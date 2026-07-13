@@ -1,0 +1,18 @@
+<section class="scene scene-surface" style="padding-top:8rem">
+  <div class="scene__inner">
+    <h1 class="h2">{{ collection.title }}</h1>
+    <div class="catlogic__list" style="margin-top:3rem;display:grid;grid-template-columns:repeat(auto-fill,minmax(16rem,1fr));gap:2rem">
+      {%- for product in collection.products -%}
+        <a href="{{ product.url }}">
+          <div class="media-slot" style="aspect-ratio:1/1">
+            <img src="{{ product.featured_image | image_url: width: 600 }}" alt="{{ product.title | escape }}" loading="lazy">
+          </div>
+          <p style="margin-top:.75rem;font-weight:500">{{ product.title }}</p>
+          <p class="mono-label eyebrow">{{ product.price | money }}</p>
+        </a>
+      {%- else -%}
+        <p class="lead">Nothing here yet.</p>
+      {%- endfor -%}
+    </div>
+  </div>
+</section>

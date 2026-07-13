@@ -1,0 +1,28 @@
+{
+  "sections": {
+    "hero": { "type": "hero" },
+    "problem": { "type": "problem" },
+    "turn": { "type": "turn" },
+    "grip": { "type": "grip" },
+    "soft": { "type": "soft" },
+    "cat_logic": { "type": "cat-logic" },
+    "mirror": { "type": "mirror" },
+    "reviews": { "type": "reviews" },
+    "how_to": { "type": "how-to" },
+    "faq": { "type": "faq" },
+    "final": { "type": "final" }
+  },
+  "order": [
+    "hero",
+    "problem",
+    "turn",
+    "grip",
+    "soft",
+    "cat_logic",
+    "mirror",
+    "reviews",
+    "how_to",
+    "faq",
+    "final"
+  ]
+}

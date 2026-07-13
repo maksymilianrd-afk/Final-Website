@@ -1,0 +1,62 @@
+{%- liquid
+  assign p = settings.featured_product
+  if p != blank
+    assign price = p.price | money_without_trailing_zeros
+  else
+    assign price = '$79'
+  endif
+-%}
+<section id="top" class="hero scene-surface section" aria-label="DeskPaws" data-scene="01">
+  <div class="hero__grid">
+    <div class="hero__copy" data-reveal>
+      <h1>
+        <span class="masked-line" style="--i:0">
+          <span>Your cat stays <span class="ink-underline">close<svg viewBox="0 0 200 14" preserveAspectRatio="none" aria-hidden="true"><path class="ink-draw" style="--len:210;--dur:600ms;--delay:900ms" d="M3 9 C40 4.5, 95 10.5, 148 6.5 C170 5, 187 6.5, 197 4" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" vector-effect="non-scaling-stroke"></path></svg></span>.</span>
+        </span>
+        <span class="masked-line" style="--i:1"><span>Your desk stays calm.</span></span>
+      </h1>
+      <p class="hero__sub">The plush basket that clamps to your desk — so nobody sits on the keyboard.</p>
+      <div class="hero__cta">
+        <button type="button" class="cta" data-dp-add>
+          Get DeskPaws — {{ price }}
+          <span class="cta__chip" aria-hidden="true">&rarr;</span>
+        </button>
+        <span class="cta-sub mono-label">SHIPS IN 48H &middot; 30-DAY HOME TRIAL</span>
+      </div>
+    </div>
+
+    <div class="hero__stage" data-dp-stage="hero">
+      <div data-dp-poster>
+        {% render 'media-slot',
+          url: settings.media_hero_poster,
+          kind: 'image',
+          aspect: '16 / 9',
+          alt: 'DeskPaws basket clamped to a walnut desk edge, floating in a beige studio',
+          id: 'HF-P01' %}
+      </div>
+    </div>
+  </div>
+
+  {%- comment -%} The hero's one charm beat: handwritten note + arrow to the star knob {%- endcomment -%}
+  <span class="ink-annotation" data-reveal style="left:62%;top:47%" aria-hidden="true">
+    <span class="ink-annotation__note">hand-tight — no tools</span>
+    <svg viewBox="0 0 120 70" style="height:70px;width:120px;color:color-mix(in srgb,var(--ink) 70%,transparent)" fill="none">
+      <path class="ink-draw" style="--len:150;--dur:900ms;--delay:2200ms" d="M6 6 C30 30, 62 52, 104 56" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path>
+      <path class="ink-draw" style="--len:40;--dur:250ms;--delay:3000ms" d="M93 62 C97 60, 101 58, 105 56 C102 53, 99 50, 97 47" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+    </svg>
+  </span>
+
+  <p class="hero__spec mono-label">HOLDS 22 KG &middot; FITS EDGES 20–75 MM &middot; WASHABLE</p>
+
+  <div class="scroll-cue" aria-hidden="true">
+    <span class="scroll-cue__line"></span>
+    <span class="mono-label" style="opacity:.5">Scroll</span>
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Scene 01 — Hero",
+  "settings": []
+}
+{% endschema %}

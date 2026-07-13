@@ -1,0 +1,51 @@
+{%- comment -%} Clean styled PDP fallback (the film at / is the main funnel). {%- endcomment -%}
+<section class="scene scene-surface" style="padding-top:8rem">
+  <div class="scene__inner">
+    <div class="split">
+      <div>
+        {%- if product.featured_media -%}
+          <div class="media-slot" style="aspect-ratio:1/1">
+            <img src="{{ product.featured_media | image_url: width: 1200 }}" alt="{{ product.featured_media.alt | escape }}" loading="eager">
+          </div>
+        {%- else -%}
+          {% render 'media-slot', url: '', kind: 'image', aspect: '1/1', alt: product.title, id: 'PRODUCT' %}
+        {%- endif -%}
+        {%- if product.media.size > 1 -%}
+          <div class="rail" style="padding:1rem 0;margin-top:1rem">
+            {%- for media in product.media -%}
+              <li style="list-style:none">
+                <div class="media-slot" style="width:6rem;aspect-ratio:1/1">
+                  <img src="{{ media | image_url: width: 240 }}" alt="{{ media.alt | escape }}" loading="lazy">
+                </div>
+              </li>
+            {%- endfor -%}
+          </div>
+        {%- endif -%}
+      </div>
+
+      <div>
+        <h1 class="h2">{{ product.title }}</h1>
+        <p class="final__price" style="margin-top:1rem">
+          <span style="font-weight:500">{{ product.price | money }}</span>
+          {%- if product.compare_at_price > product.price -%}
+            <s>{{ product.compare_at_price | money }}</s>
+            <span class="mono-label eyebrow" style="margin-left:.25rem">LAUNCH PRICE</span>
+          {%- endif -%}
+        </p>
+
+        <form method="post" action="{{ routes.cart_add_url }}" class="dp-pdp-form" style="margin-top:2rem">
+          <input type="hidden" name="id" value="{{ product.selected_or_first_available_variant.id }}">
+          <button type="submit" class="cta cta--lg"{% unless product.available %} disabled{% endunless %}>
+            {% if product.available %}Get DeskPaws{% else %}Sold out{% endif %}
+            <span class="cta__chip" aria-hidden="true">&rarr;</span>
+          </button>
+          <span class="cta-sub mono-label">SHIPS IN 48H &middot; 30-DAY HOME TRIAL &middot; FREE RETURNS</span>
+        </form>
+
+        <div class="lead" style="margin-top:2.5rem">{{ product.description }}</div>
+
+        <p style="margin-top:2rem"><a href="{{ routes.root_url }}" class="mono-label eyebrow">← SEE THE FULL STORY</a></p>
+      </div>
+    </div>
+  </div>
+</section>

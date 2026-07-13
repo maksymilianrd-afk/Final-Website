@@ -1,0 +1,35 @@
+{%- comment -%}
+  Renders a film media position: a real asset when a URL is set, otherwise a
+  labelled aspect-correct placeholder (build spec §9). Params:
+    url, kind ('image'|'video'), aspect (e.g. '16/9'), alt, id, poster, class
+{%- endcomment -%}
+{%- liquid
+  assign _aspect = aspect | default: '16 / 9'
+  assign _class = class | default: ''
+-%}
+{%- if url != blank -%}
+  {%- if kind == 'video' -%}
+    <div class="media-slot {{ _class }}" style="aspect-ratio: {{ _aspect }}">
+      <video
+        data-dp-video
+        src="{{ url }}"
+        muted
+        loop
+        playsinline
+        preload="none"
+        {% if poster %}poster="{{ poster }}"{% endif %}
+        aria-label="{{ alt | escape }}"></video>
+    </div>
+  {%- else -%}
+    <div class="media-slot {{ _class }}" style="aspect-ratio: {{ _aspect }}">
+      <img src="{{ url }}" alt="{{ alt | escape }}" loading="lazy" decoding="async">
+    </div>
+  {%- endif -%}
+{%- else -%}
+  <div class="media-slot {{ _class }}" role="img" aria-label="{{ alt | escape }} (asset in production)" style="aspect-ratio: {{ _aspect }}">
+    <div class="media-slot__label"><span class="mono-label">{{ id }} &middot; IN PRODUCTION</span></div>
+    <svg class="media-slot__line" preserveAspectRatio="none" viewBox="0 0 100 100" aria-hidden="true">
+      <line x1="0" y1="100" x2="100" y2="0" stroke="currentColor" stroke-width="0.25"></line>
+    </svg>
+  </div>
+{%- endif -%}

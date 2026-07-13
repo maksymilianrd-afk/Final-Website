@@ -1,0 +1,29 @@
+<section class="scene scene-surface" style="padding-top:8rem">
+  <div class="scene__inner" style="max-width:48rem">
+    <h1 class="h2">Cart</h1>
+    {%- if cart.item_count == 0 -%}
+      <p class="lead">Nothing here yet. The spot is still unclaimed.</p>
+      <p style="margin-top:2rem"><a href="{{ routes.root_url }}" class="cta">Meet DeskPaws <span class="cta__chip" aria-hidden="true">&rarr;</span></a></p>
+    {%- else -%}
+      <form method="post" action="{{ routes.cart_url }}">
+        {%- for item in cart.items -%}
+          <div style="display:flex;gap:1.5rem;align-items:center;padding:1.5rem 0;border-top:1px solid var(--hairline)">
+            {%- if item.image -%}
+              <div class="media-slot" style="width:5rem;aspect-ratio:1/1;flex:0 0 auto">
+                <img src="{{ item.image | image_url: width: 200 }}" alt="{{ item.title | escape }}">
+              </div>
+            {%- endif -%}
+            <div style="flex:1">
+              <p style="font-weight:500">{{ item.product.title }}</p>
+              <p class="mono-label eyebrow">QTY {{ item.quantity }} &middot; {{ item.final_line_price | money }}</p>
+            </div>
+          </div>
+        {%- endfor -%}
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:2rem;padding-top:1.5rem;border-top:1px solid var(--hairline)">
+          <span class="mono-label">SUBTOTAL {{ cart.total_price | money }}</span>
+          <button type="submit" name="checkout" class="cta cta--lg">Checkout <span class="cta__chip" aria-hidden="true">&rarr;</span></button>
+        </div>
+      </form>
+    {%- endif -%}
+  </div>
+</section>

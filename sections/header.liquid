@@ -1,0 +1,21 @@
+<header class="dp-nav">
+  <nav class="dp-nav__pill" aria-label="Primary">
+    <a class="dp-nav__brand" href="{{ routes.root_url }}" aria-label="DeskPaws — home">
+      {% render 'silhouette', class: 'dp-nav__mark', style: 'height:1rem;width:auto;color:var(--ink)' %}
+      <span class="dp-nav__brand-text">DESKPAWS</span>
+    </a>
+    <div class="dp-nav__links">
+      <a href="#scene-03">Story</a>
+      <a href="#scene-08">Reviews</a>
+      <a href="#scene-10">FAQ</a>
+      <a class="dp-nav__cart" href="{{ routes.cart_url }}">Cart (<span id="dp-cart-count">{{ cart.item_count }}</span>)</a>
+    </div>
+  </nav>
+</header>
+
+{% schema %}
+{
+  "name": "Header",
+  "settings": []
+}
+{% endschema %}

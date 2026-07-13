@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="{{ request.locale.iso_code }}">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#EDE7DE">
+    <link rel="canonical" href="{{ canonical_url }}">
+    <link rel="preconnect" href="https://cdn.shopify.com" crossorigin>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+
+    {%- if settings.model_base_url != blank -%}
+      <link rel="preconnect" href="{{ settings.model_base_url | split: '/models' | first }}" crossorigin>
+    {%- endif -%}
+
+    <title>
+      {{ page_title }}
+      {%- if current_tags %} &ndash; tagged "{{ current_tags | join: ', ' }}"{% endif -%}
+      {%- if current_page != 1 %} &ndash; Page {{ current_page }}{% endif -%}
+      {%- unless page_title contains shop.name %} &ndash; {{ shop.name }}{% endunless -%}
+    </title>
+
+    {%- if page_description -%}
+      <meta name="description" content="{{ page_description | escape }}">
+    {%- endif -%}
+
+    <script>document.documentElement.classList.add('js');</script>
+
+    {{ content_for_header }}
+
+    {{ 'deskpaws.css' | asset_url | stylesheet_tag }}
+
+    {%- comment -%} Product JSON-LD (one product store) {%- endcomment -%}
+    {%- assign dp_product = settings.featured_product -%}
+    {%- if dp_product != blank -%}
+      <script type="application/ld+json">
+        {
+          "@context": "https://schema.org",
+          "@type": "Product",
+          "name": {{ dp_product.title | json }},
+          "description": {{ dp_product.description | strip_html | truncatewords: 40 | json }},
+          "image": {{ dp_product.featured_image | image_url: width: 1200 | prepend: "https:" | json }},
+          "brand": { "@type": "Brand", "name": "DeskPaws" },
+          "offers": {
+            "@type": "Offer",
+            "price": {{ dp_product.price | divided_by: 100.0 | json }},
+            "priceCurrency": {{ cart.currency.iso_code | json }},
+            "availability": "{% if dp_product.available %}https://schema.org/InStock{% else %}https://schema.org/OutOfStock{% endif %}",
+            "url": {{ dp_product.url | prepend: request.origin | json }}
+          }
+        }
+      </script>
+    {%- endif -%}
+  </head>
+
+  <body class="grain-layer template-{{ request.page_type | handle }}">
+    <a class="skip-link" href="#product-cta">Skip to buy</a>
+
+    {%- comment -%} The persistent stage layers (progressive enhancement) {%- endcomment -%}
+    <div id="dp-bg" aria-hidden="true"></div>
+    <div id="dp-canvas" aria-hidden="true"></div>
+
+    {% section 'header' %}
+
+    <main id="MainContent">
+      {{ content_for_layout }}
+    </main>
+
+    {% render 'cart-toast' %}
+
+    {%- comment -%}
+      Stage config → the bundle reads these data attributes. Model + media
+      URLs come from theme settings so a merchant can point them at Shopify
+      Files CDN URLs; they default to the public repo via jsDelivr.
+    {%- endcomment -%}
+    <script
+      id="dp-config"
+      type="application/json"
+      data-enable-stage="{{ settings.enable_stage | default: true }}"
+    >
+      {
+        "modelBase": {{ settings.model_base_url | json }},
+        "furLevel": {{ settings.fur_level | default: 'c' | json }},
+        "cartUrl": {{ routes.cart_add_url | json }},
+        "variantId": {{ settings.featured_product.selected_or_first_available_variant.id | json }}
+      }
+    </script>
+
+    {%- if settings.enable_stage -%}
+      <script src="{{ 'deskpaws-stage.js' | asset_url }}" defer></script>
+    {%- endif -%}
+    <script src="{{ 'deskpaws-ui.js' | asset_url }}" defer></script>
+  </body>
+</html>

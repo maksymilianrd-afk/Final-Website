@@ -1,0 +1,25 @@
+{
+  "general": {
+    "meta": {
+      "tags": "Tagged \"{{ tags }}\"",
+      "page": "Page {{ page }}"
+    },
+    "404": {
+      "title": "This page wandered off. Cats, probably.",
+      "link": "Back to the desk"
+    }
+  },
+  "products": {
+    "product": {
+      "add_to_cart": "Get DeskPaws",
+      "sold_out": "Sold out",
+      "unavailable": "Unavailable"
+    }
+  },
+  "cart": {
+    "general": {
+      "title": "Cart",
+      "empty": "Nothing here yet. The spot is still unclaimed."
+    }
+  }
+}

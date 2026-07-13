@@ -1,0 +1,28 @@
+<section id="scene-03" class="scene scene-surface" aria-label="Meet DeskPaws" data-scene="03">
+  <span class="slate-numeral slate-numeral--left" aria-hidden="true">03</span>
+  <div class="scene__inner">
+    <div class="split">
+      <div data-dp-stage="dock">
+        <div data-dp-poster>
+          {% render 'media-slot',
+            url: '',
+            kind: 'image',
+            aspect: '4 / 3',
+            alt: 'The DeskPaws clamp docking onto a walnut desk edge',
+            id: 'SCENE03' %}
+        </div>
+      </div>
+      <div data-reveal>
+        <h2 class="h2"><span class="masked-line"><span>Meet DeskPaws.</span></span></h2>
+        <p class="lead">A basket for the cat. A clamp for the desk. Peace for both of you.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Scene 03 — The Turn",
+  "settings": []
+}
+{% endschema %}

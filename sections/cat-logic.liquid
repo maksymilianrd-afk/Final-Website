@@ -1,0 +1,53 @@
+<section class="scene scene-surface" aria-label="Will my cat actually use it?" data-scene="06">
+  <div class="scene__inner">
+    <div class="catlogic">
+      <div class="catlogic__sticky" data-reveal>
+        <h2 class="h2">Will my cat actually use it?</h2>
+        <p class="lead">Almost certainly — and here&rsquo;s the biology.</p>
+      </div>
+
+      <div class="catlogic__list">
+        <div class="passage" data-reveal>
+          <div class="passage__media">
+            {% render 'media-slot', url: settings.media_v06a, kind: 'video', aspect: '4 / 3', alt: 'A grey cat steps up from a chair into the DeskPaws basket', id: 'HF-V06a' %}
+          </div>
+          <div>
+            <h3>Elevation.</h3>
+            <p>Cats survey. Desk height is throne height.</p>
+          </div>
+        </div>
+
+        <div class="passage passage--flip" data-reveal>
+          <div class="passage__media">
+            {% render 'media-slot', url: settings.media_v06b, kind: 'video', aspect: '4 / 3', alt: 'A cat circles and curls into the plush basket, seen from above', id: 'HF-V06b' %}
+          </div>
+          <div>
+            <h3>Enclosure.</h3>
+            <p>Curved walls read as safety. Bowls beat mats, every time.</p>
+          </div>
+        </div>
+
+        <div class="passage" data-reveal>
+          <div class="passage__media">
+            {% render 'media-slot', url: settings.media_v06c, kind: 'video', aspect: '4 / 3', alt: 'A cat asleep in the basket, one paw over the rim toward the desk', id: 'HF-V06c' %}
+          </div>
+          <div>
+            <h3>Proximity.</h3>
+            <p>They don&rsquo;t want your keyboard. They want you.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="trust-bar" data-reveal>
+      <p class="mono-label">MOST CATS CLAIM IT WITHIN A DAY &middot; 30-DAY &ldquo;SHE IGNORED IT&rdquo; RETURNS</p>
+    </div>
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Scene 06 — Cat Logic",
+  "settings": []
+}
+{% endschema %}

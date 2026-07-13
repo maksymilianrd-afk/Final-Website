@@ -1,0 +1,56 @@
+{%- liquid
+  assign p = settings.featured_product
+  if p != blank
+    assign price = p.price | money_without_trailing_zeros
+    assign compare = p.compare_at_price | money_without_trailing_zeros
+    assign title = p.title
+  else
+    assign price = '$79'
+    assign compare = '$99'
+    assign title = 'DeskPaws'
+  endif
+-%}
+<section id="product-cta" class="final scene-surface" aria-label="Get DeskPaws" data-scene="11">
+  <div class="final__inner">
+    <div class="final__media" data-dp-stage="lastframe">
+      <div data-dp-poster>
+        {% render 'media-slot', url: settings.media_last_frame, kind: 'image', aspect: '16 / 9', alt: 'The DeskPaws basket docked on a walnut desk fragment in a beige studio', id: 'HF-P11' %}
+      </div>
+    </div>
+
+    <div data-reveal style="display:flex;flex-direction:column;align-items:center">
+      <h2>Give them their spot.</h2>
+      <p class="final__price">
+        <span style="font-weight:500">{{ title }} — {{ price }}</span>
+        {%- if p == blank or p.compare_at_price > p.price -%}
+          <s>{{ compare }}</s> <span class="mono-label eyebrow" style="margin-left:.25rem">LAUNCH PRICE</span>
+        {%- endif -%}
+      </p>
+      <div style="margin-top:2rem">
+        <button type="button" class="cta cta--lg" data-dp-add>
+          Get DeskPaws
+          <span class="cta__chip" aria-hidden="true">&rarr;</span>
+        </button>
+        <span class="cta-sub mono-label">SHIPS IN 48H &middot; 30-DAY HOME TRIAL &middot; FREE RETURNS</span>
+      </div>
+    </div>
+  </div>
+
+  <footer class="footer">
+    {% render 'silhouette', class: 'footer__mark', style: 'height:1.25rem;width:auto;color:color-mix(in srgb,var(--ink) 60%,transparent)' %}
+    <p class="footer__line mono-label">
+      <span>© 2026 DESKPAWS</span><span aria-hidden="true">·</span>
+      <a href="mailto:hello@deskpaws.com">HELLO@DESKPAWS.COM</a><span aria-hidden="true">·</span>
+      <a href="{{ routes.cart_url }}">SHIPPING &amp; RETURNS</a><span aria-hidden="true">·</span>
+      <a href="/policies/privacy-policy">PRIVACY</a>
+    </p>
+    <p class="mono-label" style="color:color-mix(in srgb,var(--ink) 40%,transparent)">VISA · MASTERCARD · PAYPAL · APPLE PAY</p>
+  </footer>
+</section>
+
+{% schema %}
+{
+  "name": "Scene 11 — Final",
+  "settings": []
+}
+{% endschema %}

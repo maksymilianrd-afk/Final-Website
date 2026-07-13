@@ -1,35 +1,19 @@
 {
-  "name": "deskpaws",
-  "version": "0.1.0",
+  "name": "deskpaws-theme",
+  "version": "1.0.0",
+  "description": "DeskPaws — cinematic Shopify theme. Liquid renders the film; a three.js stage progressively enhances it.",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint"
-  },
-  "dependencies": {
-    "@fontsource/caveat": "^5.2.8",
-    "@react-three/drei": "^10.7.7",
-    "@react-three/fiber": "^9.4.0",
-    "detect-gpu": "^5.0.70",
-    "geist": "^1.5.1",
-    "gsap": "^3.13.0",
-    "lenis": "^1.3.11",
-    "next": "^15.5.6",
-    "react": "^19.2.0",
-    "react-dom": "^19.2.0",
-    "three": "^0.180.0",
-    "zustand": "^5.0.8"
+    "build": "node build/esbuild.mjs",
+    "watch": "node build/esbuild.mjs --watch"
   },
   "devDependencies": {
-    "@fontsource-variable/archivo": "^5.2.8",
-    "@tailwindcss/postcss": "^4.1.16",
-    "@types/node": "^24",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
-    "@types/three": "^0.180.0",
-    "tailwindcss": "^4.1.16",
-    "typescript": "^5"
+    "esbuild": "^0.24.2",
+    "typescript": "^5.7.2"
+  },
+  "dependencies": {
+    "gsap": "^3.13.0",
+    "lenis": "^1.1.18",
+    "three": "^0.171.0"
   }
 }
