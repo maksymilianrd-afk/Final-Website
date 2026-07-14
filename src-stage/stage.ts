@@ -123,11 +123,35 @@ export async function initStage(
   onReady();
 
   // Contained mode holds a fixed centred pose; film mode reads the scroll table.
+  let manualYaw = 0; // pointer-drag turntable offset
   if (contained) {
     rig.camera.position.set(...HERO_CONTAINED.camPos);
     targetVec.set(...HERO_CONTAINED.camTarget);
+    rig.camera.lookAt(targetVec);
     rig.key.intensity = 2.0;
     rig.fill.intensity = 0.35;
+
+    // touch / drag to spin the whole still-life
+    const canvas = rig.renderer.domElement;
+    canvas.style.pointerEvents = "auto";
+    canvas.style.touchAction = "pan-y";
+    let dragging = false;
+    let startX = 0;
+    let startYaw = 0;
+    const down = (x: number) => {
+      dragging = true;
+      startX = x;
+      startYaw = manualYaw;
+    };
+    const move = (x: number) => {
+      if (dragging) manualYaw = startYaw + (x - startX) * 0.008;
+    };
+    const up = () => {
+      dragging = false;
+    };
+    canvas.addEventListener("pointerdown", (e) => down(e.clientX));
+    window.addEventListener("pointermove", (e) => move(e.clientX));
+    window.addEventListener("pointerup", up);
   }
 
   const clock = new THREE.Clock();
@@ -136,17 +160,11 @@ export async function initStage(
     const t = clock.elapsedTime;
 
     if (contained) {
-      // static docked product, centred; gentle idle unless reduced-motion
-      rig.camera.lookAt(targetVec);
-      const root = nodes.get(NODE.root);
-      const rest = nodes.rest.get(NODE.root);
-      if (root && rest) {
-        root.quaternion.copy(rest.quaternion);
-        if (!cfg.reduced) {
-          const yaw = ((6 * Math.PI) / 180) * Math.sin((t / 6) * Math.PI * 2);
-          root.rotateY(yaw);
-        }
-      }
+      // An unmistakable turntable: the whole still-life spins slowly and
+      // continuously (a full turn in ~18s), plus any pointer-drag offset.
+      // Reduced-motion instead gets a gentle bounded sway (never a full spin).
+      const auto = cfg.reduced ? Math.sin(t * 0.4) * 0.12 : t * 0.35;
+      model.rotation.y = ASSEMBLY_YAW + manualYaw + auto;
       rig.renderer.render(rig.scene, rig.camera);
       requestAnimationFrame(frame);
       return;
