@@ -55,9 +55,12 @@ function boot(): void {
   const onReady = () => {
     if (mode === "film") {
       document.body.classList.add("dp-stage-on");
+      // Fade the placeholder posters for every scene the 3D product features
+      // in (hero · dock · explode · knob · finale) so the live stage shows
+      // through. Content scenes (fur video, cat films, UGC) keep their media.
       document
         .querySelectorAll<HTMLElement>(
-          '[data-dp-stage="hero"] [data-dp-poster], [data-dp-stage="dock"] [data-dp-poster]',
+          '[data-dp-stage="hero"] [data-dp-poster], [data-dp-stage="dock"] [data-dp-poster], [data-dp-stage="explode"] [data-dp-poster], [data-dp-stage="knob"] [data-dp-poster], [data-dp-stage="lastframe"] [data-dp-poster]',
         )
         .forEach((el) => {
           el.style.transition = "opacity .5s ease";

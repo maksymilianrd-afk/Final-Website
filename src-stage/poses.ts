@@ -37,7 +37,12 @@ export type StagePose = {
   magnet: number;
   /** dock sequence t (0 = approach pose, 1 = locked) */
   dockT: number;
-  /** canvas element opacity — the stage hands off to the DOM at Scene 04 */
+  /** explode sequence t (Scene 04 centerpiece; 0 = assembled) */
+  explodeT: number;
+  /** knob-turn sequence t (Scene 09; 0 = rest) */
+  knobT: number;
+  /** canvas element opacity — the product features in 1–4/9/11, hands the
+   * frame to DOM media in the content scenes (5–8, 10). */
   canvasOpacity: number;
 };
 
@@ -57,7 +62,7 @@ const seg = (t: number, a: number, b: number) =>
 /** Scene 01 rest (v2.1 hero): warm still-life, eye-level-plus, clamp fully
  * legible toward camera, desk anchored right, basket cantilevering left
  * toward the headline — text ≤46vw, basket left extent ≥48vw (§3.5.5). */
-const HERO: Pick<StagePose, "camPos" | "camTarget"> = {
+export const HERO: Pick<StagePose, "camPos" | "camTarget"> = {
   camPos: [qp("cx", 0.32), qp("cy", 0.4), qp("cz", -1.02)],
   camTarget: [qp("tx", 0.09), qp("ty", -0.02), qp("tz", 0.05)],
 };
@@ -84,6 +89,8 @@ export function computePose(sceneId: number, progress: number): StagePose {
         idle: 1,
         magnet: p < 0.05 ? 1 : 0,
         dockT: 1,
+        explodeT: 0,
+        knobT: 0,
         canvasOpacity: 1,
       };
     }
@@ -98,6 +105,8 @@ export function computePose(sceneId: number, progress: number): StagePose {
         idle: 1,
         magnet: 0,
         dockT: 1,
+        explodeT: 0,
+        knobT: 0,
         canvasOpacity: 1,
       };
     }
@@ -117,20 +126,83 @@ export function computePose(sceneId: number, progress: number): StagePose {
         idle: 1 - seg(p, 0, 0.1), // sequence takes the root
         magnet: 0,
         dockT,
+        explodeT: 0,
+        knobT: 0,
+        canvasOpacity: 1,
+      };
+    }
+    case 4: {
+      // The centerpiece (§4.2): pinned. Settle from the dock pose into an
+      // explode framing, then a triangle — assemble → separate → reassemble —
+      // so scrolling forward blows it apart and scrolling back rebuilds it.
+      const p = progress;
+      const settle = seg(p, 0, 0.15);
+      const eUp = seg(p, 0.18, 0.55);
+      const eDown = seg(p, 0.82, 1.0);
+      return {
+        camPos: l3([0.55, -0.3, -0.48], [0.46, 0.1, -0.66], settle),
+        camTarget: l3([0.0, -0.09, 0.22], [0.02, 0.02, 0.13], settle),
+        light: 1,
+        deskX: 0,
+        tumble: 0,
+        idle: 0, // the sequence owns the root
+        magnet: 0,
+        dockT: 1,
+        explodeT: eUp * (1 - eDown),
+        knobT: 0,
+        canvasOpacity: 1,
+      };
+    }
+    case 9: {
+      // How it works: drop low and close on the star knob; the screw turns
+      // through its detents as you scroll (§4.3).
+      const p = progress;
+      const cin = seg(p, 0, 0.25);
+      return {
+        camPos: l3([0.4, -0.15, -0.55], [0.32, -0.2, -0.44], cin),
+        camTarget: l3([0.05, -0.07, 0.18], [0.06, -0.09, 0.2], cin),
+        light: 1,
+        deskX: 0,
+        tumble: 0,
+        idle: 0,
+        magnet: 0,
+        dockT: 1,
+        explodeT: 0,
+        knobT: p,
+        canvasOpacity: 1,
+      };
+    }
+    case 11: {
+      // The finale: the product returns to its hero pose beside the CTA,
+      // breathing, for the photo match-cut.
+      return {
+        camPos: HERO.camPos,
+        camTarget: HERO.camTarget,
+        light: 1,
+        deskX: 0,
+        tumble: 0,
+        idle: 1,
+        magnet: 0,
+        dockT: 1,
+        explodeT: 0,
+        knobT: 0,
         canvasOpacity: 1,
       };
     }
     default: {
-      // Scene 04+ — Phase 3 takes over; the stage bows out over 400ms.
+      // Content scenes (5–8, 10): the product bows out over 400ms and the DOM
+      // media (cat films, reviews, UGC) owns the frame.
       return {
-        camPos: [0.55, -0.3, -0.48],
-        camTarget: [0.0, -0.09, 0.22],
+        camPos: [0.46, 0.1, -0.66],
+        camTarget: [0.02, 0.02, 0.13],
         light: 1,
         deskX: 0,
         tumble: 0,
-        idle: 0.5,
+        idle: 0.4,
         magnet: 0,
         dockT: 1,
+        explodeT: 0,
+        knobT: 0,
         canvasOpacity: 0,
       };
     }

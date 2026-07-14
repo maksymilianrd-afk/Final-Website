@@ -10,6 +10,12 @@ import { state } from "./state";
 export function initScroll(bg: HTMLElement): void {
   gsap.registerPlugin(ScrollTrigger);
 
+  // Mobile hardening (Fix 5): don't refresh/thrash on the height-only resize a
+  // collapsing address bar fires. (We deliberately do NOT call normalizeScroll
+  // here — it fights Lenis for scroll control. And note this whole path is
+  // desktop-only: phones get the contained hero, which has no ScrollTrigger.)
+  ScrollTrigger.config({ ignoreMobileResize: true });
+
   const lenis = new Lenis({ lerp: 0.12 });
   lenis.on("scroll", ScrollTrigger.update);
   gsap.ticker.add((t) => lenis.raf(t * 1000));
@@ -28,21 +34,24 @@ export function initScroll(bg: HTMLElement): void {
     state.progress = p;
   };
 
-  // Scene 01 — the carry (hero scroll-out)
+  // Scene 01 — the carry (hero scroll-out). Ends exactly where 02 begins so the
+  // two onUpdate handlers can never both be writing the shared state (Fix 4):
+  // "bottom top" fires when the hero's bottom reaches the viewport top — the
+  // same boundary as scene 02's "top top". Adjacent, not overlapping.
   ScrollTrigger.create({
     trigger: '[data-scene="01"]',
     start: "top top",
-    end: "bottom 25%",
+    end: "bottom top",
     onUpdate: (s) => set(1, s.progress),
     onEnter: () => paint(1),
     onEnterBack: () => paint(1),
   });
 
-  // Scene 02 — waiting in the wings
+  // Scene 02 — waiting in the wings. Begins exactly where 01 ended.
   ScrollTrigger.create({
     trigger: '[data-scene="02"]',
-    start: "top 40%",
-    end: "bottom 40%",
+    start: "top top",
+    end: "bottom top",
     onUpdate: (s) => set(2, s.progress),
     onEnter: () => paint(2),
     onEnterBack: () => paint(2),
@@ -60,18 +69,42 @@ export function initScroll(bg: HTMLElement): void {
     onEnterBack: () => paint(3),
   });
 
-  // Scenes 04–11 — background direction + stage hand-off
-  const rest: Array<[number, string]> = [
-    [4, '[data-scene="04"]'],
+  // Scene 04 — the centerpiece (Fix 1). Pinned for four viewport-heights so
+  // there's a runway to scrub the explode → reassemble.
+  ScrollTrigger.create({
+    trigger: '[data-scene="04"]',
+    start: "top top",
+    end: "+=400%",
+    pin: true,
+    anticipatePin: 1,
+    onUpdate: (s) => set(4, s.progress),
+    onEnter: () => paint(4),
+    onEnterBack: () => paint(4),
+  });
+
+  // Scene 09 — how it works: the star knob turns through its detents as you
+  // scroll past (Fix 1). Scrubbed, not pinned.
+  ScrollTrigger.create({
+    trigger: '[data-scene="09"]',
+    start: "top top",
+    end: "bottom top",
+    onUpdate: (s) => set(9, s.progress),
+    onEnter: () => paint(9),
+    onEnterBack: () => paint(9),
+  });
+
+  // Content scenes — DOM media owns the frame. 05–08 and 10 fade the product
+  // out (pose canvasOpacity 0); 11 brings it back beside the CTA. Their poses
+  // ignore progress, so a plain enter/enter-back claim of the scene is enough.
+  const content: Array<[number, string]> = [
     [5, '[data-scene="05"]'],
     [6, '[data-scene="06"]'],
     [7, '[data-scene="07"]'],
     [8, '[data-scene="08"]'],
-    [9, '[data-scene="09"]'],
     [10, '[data-scene="10"]'],
     [11, '[data-scene="11"]'],
   ];
-  for (const [id, sel] of rest) {
+  for (const [id, sel] of content) {
     ScrollTrigger.create({
       trigger: sel,
       start: "top 55%",

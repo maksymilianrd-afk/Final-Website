@@ -9,6 +9,7 @@ import { NODE } from "./nodes";
 import {
   ASSEMBLY_YAW,
   DESK_SHIFT,
+  HERO,
   HERO_CONTAINED,
   computePose,
 } from "./poses";
@@ -51,11 +52,18 @@ function applyFurBake(scene: THREE.Object3D, base: string): void {
   mat.needsUpdate = true;
 }
 
-function prepare(scene: THREE.Object3D): void {
+/** §3.5.1 — shadow flags, colorSpace, texture sharpening, and the PBR
+ * material correction. Metalness is effectively binary: the authored 0.54 on
+ * the clamp/screw robs them of colour and reads as grey mud. Powder-coated
+ * steel is *paint* (a dielectric); the zinc screw is real metal; fabric never
+ * is. Fix each explicitly so the studio IBL has something true to reflect. */
+function prepare(scene: THREE.Object3D, renderer: THREE.WebGLRenderer): void {
+  const maxAniso = renderer.capabilities.getMaxAnisotropy();
   scene.traverse((obj) => {
     const mesh = obj as THREE.Mesh;
     if (!mesh.isMesh) return;
     const mat = mesh.material as THREE.MeshStandardMaterial;
+
     if (mesh.name === NODE.fur) {
       mesh.castShadow = false;
       mesh.receiveShadow = false;
@@ -64,11 +72,41 @@ function prepare(scene: THREE.Object3D): void {
     } else {
       mesh.castShadow = true;
     }
+
+    if (!mat) return;
+
     // colorSpace verification (§3.5.1)
-    if (mat && mat.map && mat.map.colorSpace !== THREE.SRGBColorSpace) {
+    if (mat.map && mat.map.colorSpace !== THREE.SRGBColorSpace) {
       mat.map.colorSpace = THREE.SRGBColorSpace;
-      mat.needsUpdate = true;
     }
+    // Sharpen textures at grazing angles — fur strands and mesh weave need it.
+    for (const t of [mat.map, mat.normalMap, mat.roughnessMap]) {
+      if (t) t.anisotropy = maxAniso;
+    }
+
+    switch (mesh.name) {
+      case NODE.screw: // zinc screw + washer = actual metal
+        mat.metalness = 1.0;
+        mat.roughness = 0.32;
+        break;
+      case NODE.base: // powder-coated steel = paint = dielectric
+        mat.metalness = 0.12;
+        mat.roughness = 0.55;
+        mat.color.set("#17161a"); // near-black, not pure black — keeps form
+        break;
+      case NODE.top:
+      case NODE.bottom:
+      case NODE.fur: // fabric is never metal
+        mat.metalness = 0.0;
+        mat.roughness = 0.95;
+        break;
+      case NODE.desk:
+        mat.metalness = 0.0;
+        mat.roughness = 0.45;
+        break;
+    }
+    mat.envMapIntensity = 1.0;
+    mat.needsUpdate = true;
   });
 }
 
@@ -82,6 +120,32 @@ function anchorDesk(scene: THREE.Object3D): void {
   proxy.scale.z = DEPTH;
   proxy.position.z = FRONT_EDGE_Z * (1 - DEPTH);
   proxy.position.x = DESK_SHIFT;
+}
+
+/** The nodes any mechanical sequence may move. Reset them all to rest each
+ * frame before applying the ONE active sequence — so a node moved by the
+ * explode can never stay stuck when the scene switches to the dock, and
+ * vice-versa. Sequences compose from rest anyway; this just guarantees the
+ * inverse for nodes the active sequence doesn't touch. */
+const MECH = [
+  NODE.root,
+  NODE.top,
+  NODE.bottom,
+  NODE.base,
+  NODE.screw,
+  NODE.fur,
+] as const;
+
+function resetMechanical(nodes: Nodes): void {
+  for (const name of MECH) {
+    const n = nodes.get(name);
+    const r = nodes.rest.get(name);
+    if (n && r) {
+      n.position.copy(r.position);
+      n.quaternion.copy(r.quaternion);
+      n.scale.copy(r.scale);
+    }
+  }
 }
 
 export async function initStage(
@@ -102,7 +166,7 @@ export async function initStage(
   const gltf = await loader.loadAsync(modelUrl(cfg.modelBase, tier));
   const model = gltf.scene;
 
-  prepare(model);
+  prepare(model, rig.renderer);
   anchorDesk(model);
   if (tier === "desktop" && (cfg.furLevel === "b" || cfg.furLevel === "c")) {
     applyFurBake(model, cfg.modelBase);
@@ -116,8 +180,56 @@ export async function initStage(
   rig.scene.add(model);
 
   const nodes: Nodes = makeNodes(model);
-  const damped = { dockT: 1, tumble: 0, deskX: 0, idle: 1, magnet: 0 };
+  const damped = {
+    dockT: 1,
+    tumble: 0,
+    deskX: 0,
+    idle: 1,
+    magnet: 0,
+    explodeT: 0,
+    knobT: 0,
+  };
   const targetVec = new THREE.Vector3(0.09, -0.02, 0.05);
+
+  // ── Composition binding (Fix 6) ────────────────────────────────────────
+  // The poses are world-space camera coords tuned at one aspect ratio; at any
+  // other width the product drifts across the headline. Hold its horizontal
+  // screen position INVARIANT across aspect ratios by panning the frustum
+  // (setViewOffset). Zero at the reference aspect, so the tuned hero is
+  // untouched; it only compensates the drift. Film mode only — contained mode
+  // frames inside the hero box and has no such coupling.
+  const REF_ASPECT = 16 / 9;
+  const restCenter = new THREE.Vector3();
+  {
+    const rootObj = nodes.get(NODE.root);
+    if (rootObj) new THREE.Box3().setFromObject(rootObj).getCenter(restCenter);
+  }
+  const probe = new THREE.PerspectiveCamera(35, REF_ASPECT, 0.01, 20);
+  const screenFracX = (aspect: number): number => {
+    probe.aspect = aspect;
+    probe.position.set(...HERO.camPos);
+    probe.up.set(0, 1, 0);
+    probe.lookAt(new THREE.Vector3(...HERO.camTarget));
+    probe.updateMatrixWorld(true);
+    probe.updateProjectionMatrix();
+    return restCenter.clone().project(probe).x * 0.5 + 0.5;
+  };
+  const targetFracX = screenFracX(REF_ASPECT);
+  const applyBinding = (): void => {
+    if (contained) {
+      rig.camera.clearViewOffset();
+      return;
+    }
+    const { w, h } = getSize();
+    const cur = screenFracX(w / h);
+    const dx = (cur - targetFracX) * w;
+    if (Number.isFinite(dx) && Math.abs(dx) > 0.5) {
+      rig.camera.setViewOffset(w, h, dx, 0, w, h);
+    } else {
+      rig.camera.clearViewOffset();
+    }
+  };
+  applyBinding();
 
   state.ready = true;
   onReady();
@@ -155,6 +267,7 @@ export async function initStage(
   }
 
   const clock = new THREE.Clock();
+  let lastOpacity = "1";
   function frame() {
     const delta = Math.min(clock.getDelta(), 0.1);
     const t = clock.elapsedTime;
@@ -191,11 +304,22 @@ export async function initStage(
     damped.deskX = THREE.MathUtils.damp(damped.deskX, pose.deskX, DAMP, delta);
     damped.idle = THREE.MathUtils.damp(damped.idle, pose.idle, DAMP, delta);
     damped.magnet = THREE.MathUtils.damp(damped.magnet, pose.magnet * state.pointerX, DAMP, delta);
+    damped.explodeT = THREE.MathUtils.damp(damped.explodeT, pose.explodeT, DAMP, delta);
+    damped.knobT = THREE.MathUtils.damp(damped.knobT, pose.knobT, DAMP, delta);
 
-    // the dock sequence composes root+screw from rest (scrub-safe)
-    playSequence("dock", nodes, damped.dockT);
+    // Reset every mechanical node to rest, then apply exactly ONE sequence for
+    // the current scene. This is what lets the product leave and re-enter the
+    // film without a node getting stuck mid-explode when scenes switch (Fix 1).
+    resetMechanical(nodes);
+    if (state.sceneId === 4) {
+      playSequence("explode", nodes, damped.explodeT);
+    } else if (state.sceneId === 9) {
+      playSequence("knob_turn", nodes, damped.knobT);
+    } else {
+      playSequence("dock", nodes, damped.dockT);
+    }
 
-    // rotation layers: idle breathing + magnetism + tumble
+    // rotation layers on the root: idle breathing + magnetism + tumble
     const root = nodes.get(NODE.root);
     const rest = nodes.rest.get(NODE.root);
     if (root && rest) {
@@ -212,20 +336,38 @@ export async function initStage(
       deskProxy.position.x = deskRest.position.x + damped.deskX;
     }
 
-    // hand-off: canvas opacity fades the stage out at Scene 04
-    host.style.opacity = String(pose.canvasOpacity);
+    // hand-off: the product features in 1–4/9/11 and fades to the DOM media in
+    // the content scenes. Set the target only on change; the #dp-canvas CSS
+    // opacity transition (0.4s) does the fade, so JS never fights it per frame.
+    const targetOp = String(pose.canvasOpacity);
+    if (targetOp !== lastOpacity) {
+      host.style.opacity = targetOp;
+      lastOpacity = targetOp;
+    }
 
     rig.renderer.render(rig.scene, rig.camera);
     requestAnimationFrame(frame);
   }
   requestAnimationFrame(frame);
 
-  window.addEventListener("resize", () => {
+  // Resize handling. On phones the address bar collapsing fires a height-only
+  // resize mid-scroll; ignore those (Fix 5) so we don't thrash the renderer or
+  // restart the projection. Re-run the composition binding on real resizes.
+  let vw = window.innerWidth;
+  let vh = window.innerHeight;
+  const onResize = (): void => {
+    const nw = window.innerWidth;
+    const nh = window.innerHeight;
+    if (nw === vw && Math.abs(nh - vh) < 120) return; // mobile toolbar, not real
+    vw = nw;
+    vh = nh;
     const { w, h } = getSize();
     rig.camera.aspect = w / h;
-    rig.camera.updateProjectionMatrix();
+    applyBinding(); // calls updateProjectionMatrix (with or without the offset)
     rig.renderer.setSize(w, h);
-  });
+  };
+  window.addEventListener("resize", onResize);
+  window.addEventListener("orientationchange", () => setTimeout(onResize, 250));
 
   return rig;
 }
