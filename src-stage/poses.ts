@@ -63,8 +63,10 @@ const seg = (t: number, a: number, b: number) =>
  * legible toward camera, desk anchored right, basket cantilevering left
  * toward the headline — text ≤46vw, basket left extent ≥48vw (§3.5.5). */
 export const HERO: Pick<StagePose, "camPos" | "camTarget"> = {
-  camPos: [qp("cx", 0.32), qp("cy", 0.4), qp("cz", -1.02)],
-  camTarget: [qp("tx", 0.09), qp("ty", -0.02), qp("tz", 0.05)],
+  // Closer + a longer lens (fov ~28 in rig) so the product dominates the frame
+  // — Apple/Dyson/Oryzo scale (doc 13 Fix 4). Tune live with ?cz / ?fov.
+  camPos: [qp("cx", 0.26), qp("cy", 0.3), qp("cz", -0.78)],
+  camTarget: [qp("tx", 0.07), qp("ty", -0.03), qp("tz", 0.05)],
 };
 
 /** Contained mode (mobile / reduced-motion): the product framed centered in
@@ -95,11 +97,13 @@ export function computePose(sceneId: number, progress: number): StagePose {
       };
     }
     case 2: {
-      // Waiting in the wings: far frame-right, small, dim, still breathing.
+      // Waiting in the wings (doc 13 Fix 5): pulled way back, aimed hard left so
+      // the product slides to the far-right edge — a dim, half-glimpsed
+      // silhouette that doesn't fight the headline, not a lit basket centre-stage.
       return {
-        camPos: [0.4, 0.14, -1.75],
-        camTarget: [-0.48, -0.06, 0.02],
-        light: 0.15,
+        camPos: [0.95, 0.2, -2.3],
+        camTarget: [-1.15, -0.05, 0.02],
+        light: 0.16,
         deskX: -1.2,
         tumble: -0.15,
         idle: 1,
@@ -107,7 +111,7 @@ export function computePose(sceneId: number, progress: number): StagePose {
         dockT: 1,
         explodeT: 0,
         knobT: 0,
-        canvasOpacity: 1,
+        canvasOpacity: 0.55,
       };
     }
     case 3: {
@@ -132,23 +136,25 @@ export function computePose(sceneId: number, progress: number): StagePose {
       };
     }
     case 4: {
-      // The centerpiece (§4.2): pinned. Settle from the dock pose into an
-      // explode framing, then a triangle — assemble → separate → reassemble —
-      // so scrolling forward blows it apart and scrolling back rebuilds it.
+      // The centerpiece (§4.2 / doc 13 Fix 6): pinned. The camera RETREATS as
+      // the parts separate so the whole stack is always framed — never
+      // overflowing the viewport. explodeT holds fully-apart mid-scene for
+      // inspection, then reassembles right at the end so 04→05 hands off clean;
+      // scrolling back up also rebuilds it.
       const p = progress;
-      const settle = seg(p, 0, 0.15);
-      const eUp = seg(p, 0.18, 0.55);
-      const eDown = seg(p, 0.82, 1.0);
+      const exploded = seg(p, 0.25, 0.75);
+      const eDown = seg(p, 0.85, 1.0);
+      const dist = -0.62 - 0.55 * exploded; // pull back to contain the explosion
       return {
-        camPos: l3([0.55, -0.3, -0.48], [0.46, 0.1, -0.66], settle),
-        camTarget: l3([0.0, -0.09, 0.22], [0.02, 0.02, 0.13], settle),
+        camPos: l3([0.34, 0.06, -0.62], [0.1, 0.02, dist], exploded),
+        camTarget: l3([0.03, 0.0, 0.14], [0.03, 0.04, 0.1], exploded),
         light: 1,
         deskX: 0,
         tumble: 0,
         idle: 0, // the sequence owns the root
         magnet: 0,
         dockT: 1,
-        explodeT: eUp * (1 - eDown),
+        explodeT: exploded * (1 - eDown),
         knobT: 0,
         canvasOpacity: 1,
       };

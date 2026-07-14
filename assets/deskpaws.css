@@ -410,6 +410,8 @@ body.dp-stage-on .scene-surface {
 }
 .ink-annotation {
   position: absolute;
+  left: 62%; /* static fallback (no-JS / no-WebGL) */
+  top: 47%;
   display: none;
   flex-direction: column;
   align-items: flex-start;
@@ -420,6 +422,23 @@ body.dp-stage-on .scene-surface {
   .ink-annotation {
     display: flex;
   }
+}
+/* Fix 3 — when the live stage is on, the note pins to the projected star-knob
+   anchor (--anno4) so the arrow always points AT the knob from outside the
+   product, at any width or camera angle. The translate lands the arrow tip on
+   the anchor; the note floats up-left of it. Gated to the hero scene so it
+   doesn't drift over later sections. */
+body.dp-stage-on .ink-annotation {
+  position: fixed;
+  left: var(--anno4-x, 62%);
+  top: var(--anno4-y, 47%);
+  transform: translate(-100px, -76px);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: 30;
+}
+body.dp-stage-on[data-scene="1"] .ink-annotation {
+  opacity: var(--anno4-on, 0);
 }
 .ink-annotation__note {
   font-family: var(--font-ink);

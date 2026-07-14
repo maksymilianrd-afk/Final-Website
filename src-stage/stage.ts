@@ -12,6 +12,7 @@ import {
   HERO,
   HERO_CONTAINED,
   computePose,
+  qp,
 } from "./poses";
 import { buildRig, type Rig } from "./rig";
 import { makeNodes, playSequence, type Nodes } from "./sequences";
@@ -52,11 +53,12 @@ function applyFurBake(scene: THREE.Object3D, base: string): void {
   mat.needsUpdate = true;
 }
 
-/** §3.5.1 — shadow flags, colorSpace, texture sharpening, and the PBR
- * material correction. Metalness is effectively binary: the authored 0.54 on
- * the clamp/screw robs them of colour and reads as grey mud. Powder-coated
- * steel is *paint* (a dielectric); the zinc screw is real metal; fabric never
- * is. Fix each explicitly so the studio IBL has something true to reflect. */
+/** Material + shadow pass (doc 12 Fix 3 + doc 13 Fix 1/2). The model and maps
+ * are good (see the Blender reference); the web renderer was throwing the
+ * quality away. Three corrections: fur gets soft anti-aliased strand edges
+ * (alphaToCoverage) and fabric sheen so it reads as plush not static; the hard
+ * surfaces get correct binary metalness so the clamp stops being grey mud; the
+ * desk finally casts a shadow. */
 function prepare(scene: THREE.Object3D, renderer: THREE.WebGLRenderer): void {
   const maxAniso = renderer.capabilities.getMaxAnisotropy();
   scene.traverse((obj) => {
@@ -64,26 +66,52 @@ function prepare(scene: THREE.Object3D, renderer: THREE.WebGLRenderer): void {
     if (!mesh.isMesh) return;
     const mat = mesh.material as THREE.MeshStandardMaterial;
 
+    // Shadow flags. Fur self-shadowing would be noise + expensive; the desk
+    // must both receive AND cast (the missing `castShadow`, doc 13 Fix 2).
     if (mesh.name === NODE.fur) {
       mesh.castShadow = false;
       mesh.receiveShadow = false;
     } else if (mesh.name === NODE.desk) {
       mesh.receiveShadow = true;
+      mesh.castShadow = true;
     } else {
       mesh.castShadow = true;
     }
 
     if (!mat) return;
 
-    // colorSpace verification (§3.5.1)
+    // colorSpace + grazing-angle sharpening on every map.
     if (mat.map && mat.map.colorSpace !== THREE.SRGBColorSpace) {
       mat.map.colorSpace = THREE.SRGBColorSpace;
     }
-    // Sharpen textures at grazing angles — fur strands and mesh weave need it.
     for (const t of [mat.map, mat.normalMap, mat.roughnessMap]) {
       if (t) t.anisotropy = maxAniso;
     }
 
+    // Plush fabric (basket top + fur cards): convert to physical so we can add
+    // sheen — the soft grazing-angle glow three.js added specifically for
+    // fabric. This is the difference between "grey plastic bowl" and "plush".
+    if (mesh.name === NODE.top || mesh.name === NODE.fur) {
+      const phys = new THREE.MeshPhysicalMaterial();
+      phys.copy(mat);
+      phys.metalness = 0;
+      phys.roughness = 1.0;
+      phys.envMapIntensity = 1.3; // fur drinks ambient light — let it
+      phys.sheen = 1.0;
+      phys.sheenRoughness = 0.85;
+      phys.sheenColor = new THREE.Color(0xffffff);
+      if (mesh.name === NODE.fur) {
+        phys.alphaToCoverage = true; // soft strand edges — the single most important line
+        phys.alphaTest = 0.28; // kills the faint fringe halo; A2C keeps it soft
+        phys.transparent = false; // keep MASK — never BLEND (sorting artifacts)
+        phys.side = THREE.DoubleSide;
+      }
+      mesh.material = phys;
+      phys.needsUpdate = true;
+      return;
+    }
+
+    // Hard surfaces — metalness is effectively binary; 0.54 is grey mud.
     switch (mesh.name) {
       case NODE.screw: // zinc screw + washer = actual metal
         mat.metalness = 1.0;
@@ -94,11 +122,9 @@ function prepare(scene: THREE.Object3D, renderer: THREE.WebGLRenderer): void {
         mat.roughness = 0.55;
         mat.color.set("#17161a"); // near-black, not pure black — keeps form
         break;
-      case NODE.top:
-      case NODE.bottom:
-      case NODE.fur: // fabric is never metal
+      case NODE.bottom: // breathable mesh weave — non-metal
         mat.metalness = 0.0;
-        mat.roughness = 0.95;
+        mat.roughness = 0.9;
         break;
       case NODE.desk:
         mat.metalness = 0.0;
@@ -204,7 +230,7 @@ export async function initStage(
     const rootObj = nodes.get(NODE.root);
     if (rootObj) new THREE.Box3().setFromObject(rootObj).getCenter(restCenter);
   }
-  const probe = new THREE.PerspectiveCamera(35, REF_ASPECT, 0.01, 20);
+  const probe = new THREE.PerspectiveCamera(qp("fov", 28), REF_ASPECT, 0.01, 20);
   const screenFracX = (aspect: number): number => {
     probe.aspect = aspect;
     probe.position.set(...HERO.camPos);
@@ -240,8 +266,10 @@ export async function initStage(
     rig.camera.position.set(...HERO_CONTAINED.camPos);
     targetVec.set(...HERO_CONTAINED.camTarget);
     rig.camera.lookAt(targetVec);
-    rig.key.intensity = 2.0;
-    rig.fill.intensity = 0.35;
+    // ambient-dominant, matching the rig (doc 13 Fix 1) so the phone hero fur
+    // reads as plush, not static.
+    rig.key.intensity = 1.25;
+    rig.fill.intensity = 0.45;
 
     // touch / drag to spin the whole still-life
     const canvas = rig.renderer.domElement;
@@ -268,6 +296,9 @@ export async function initStage(
 
   const clock = new THREE.Clock();
   let lastOpacity = "1";
+  let lastScene = 0;
+  const annoVec = new THREE.Vector3();
+  const docEl = document.documentElement;
   function frame() {
     const delta = Math.min(clock.getDelta(), 0.1);
     const t = clock.elapsedTime;
@@ -294,9 +325,15 @@ export async function initStage(
     targetVec.z = THREE.MathUtils.damp(targetVec.z, pose.camTarget[2], DAMP, delta);
     rig.camera.lookAt(targetVec);
 
-    // light intensity per scene
-    rig.key.intensity = THREE.MathUtils.damp(rig.key.intensity, 2.0 * pose.light, DAMP, delta);
-    rig.fill.intensity = THREE.MathUtils.damp(rig.fill.intensity, 0.35 * Math.max(pose.light, 0.3), DAMP, delta);
+    // light intensity per scene — dim the ENVIRONMENT and rim too, not just the
+    // directional lights, or night scenes stay bright (a glowing basket on a
+    // black background). A 0.12 floor leaves a shape in the dark, not a void
+    // (doc 13 Fix 5).
+    const lit = Math.max(pose.light, 0.12);
+    rig.key.intensity = THREE.MathUtils.damp(rig.key.intensity, 1.25 * pose.light, DAMP, delta);
+    rig.fill.intensity = THREE.MathUtils.damp(rig.fill.intensity, 0.45 * Math.max(pose.light, 0.3), DAMP, delta);
+    rig.rim.intensity = THREE.MathUtils.damp(rig.rim.intensity, 1.6 * lit, DAMP, delta);
+    rig.scene.environmentIntensity = THREE.MathUtils.damp(rig.scene.environmentIntensity, 1.15 * lit, DAMP, delta);
 
     // sequence state
     damped.dockT = THREE.MathUtils.damp(damped.dockT, pose.dockT, DAMP, delta);
@@ -334,6 +371,25 @@ export async function initStage(
     const deskRest = nodes.rest.get(NODE.deskProxy);
     if (deskProxy && deskRest) {
       deskProxy.position.x = deskRest.position.x + damped.deskX;
+    }
+
+    // Fix 3 — project the GLB annotation locators (rim, frame, bracket, knob)
+    // into screen space so DOM callouts follow the real parts at any camera
+    // angle or width. anno4 = the star knob, the hero arrow's target. The pan
+    // from the composition binding is baked into camera.project, so these land
+    // exactly where the product is drawn.
+    for (let i = 1; i <= 4; i++) {
+      const anchor = nodes.get(`annotation_0${i}`);
+      if (!anchor) continue;
+      anchor.getWorldPosition(annoVec);
+      annoVec.project(rig.camera);
+      docEl.style.setProperty(`--anno${i}-x`, `${(annoVec.x * 0.5 + 0.5) * window.innerWidth}px`);
+      docEl.style.setProperty(`--anno${i}-y`, `${(-annoVec.y * 0.5 + 0.5) * window.innerHeight}px`);
+      docEl.style.setProperty(`--anno${i}-on`, annoVec.z < 1 ? "1" : "0");
+    }
+    if (state.sceneId !== lastScene) {
+      document.body.dataset.scene = String(state.sceneId);
+      lastScene = state.sceneId;
     }
 
     // hand-off: the product features in 1–4/9/11 and fades to the DOM media in

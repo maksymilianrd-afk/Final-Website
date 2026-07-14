@@ -137,15 +137,17 @@ export function seqExplode(nodes: Nodes, t: number): void {
   const kBase = easeMech(seg(t, 0.4, 0.75));
   const kScrew = easeMech(seg(t, 0.6, 1));
 
-  if (top) top.position.y += 0.14 * kTop;
-  if (fur) fur.position.y += 0.14 * kTop; // fur ribbons travel with the plush top
-  if (bottom) bottom.position.y += 0.055 * kBottom;
+  // Tightened spreads (doc 13 Fix 6c): 0.14 m on a 0.40 m basket reads as
+  // "blown apart"; ~0.085 reads as a technician's careful disassembly.
+  if (top) top.position.y += 0.085 * kTop;
+  if (fur) fur.position.y += 0.085 * kTop; // fur ribbons travel with the plush top
+  if (bottom) bottom.position.y += 0.035 * kBottom;
   if (base) {
-    base.position.z += 0.06 * kBase;
+    base.position.z += 0.045 * kBase;
     base.rotateX((-12 * Math.PI) / 180 * kBase);
   }
   if (screw) {
-    screw.position.y -= 0.06 * kScrew;
+    screw.position.y -= 0.045 * kScrew;
     screw.rotateY(-kScrew * Math.PI * 4); // −720°, unthreads
   }
 }
