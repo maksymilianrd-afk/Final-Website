@@ -12,14 +12,18 @@ export type Rig = {
   fill: THREE.DirectionalLight;
 };
 
-export function buildRig(host: HTMLElement): Rig {
+export function buildRig(
+  host: HTMLElement,
+  getSize: () => { w: number; h: number },
+): Rig {
   const renderer = new THREE.WebGLRenderer({
     antialias: true,
     alpha: true,
     powerPreference: "high-performance",
   });
+  const { w, h } = getSize();
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setSize(w, h);
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.05;
   renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -34,12 +38,7 @@ export function buildRig(host: HTMLElement): Rig {
   scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
   scene.environmentIntensity = 0.55;
 
-  const camera = new THREE.PerspectiveCamera(
-    35,
-    window.innerWidth / window.innerHeight,
-    0.01,
-    20,
-  );
+  const camera = new THREE.PerspectiveCamera(35, w / h, 0.01, 20);
   camera.position.set(0.32, 0.4, -1.02);
 
   // Warm key, upper-left, soft shadows (§3.5.1)

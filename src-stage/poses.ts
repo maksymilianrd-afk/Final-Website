@@ -62,6 +62,13 @@ const HERO: Pick<StagePose, "camPos" | "camTarget"> = {
   camTarget: [qp("tx", 0.09), qp("ty", -0.02), qp("tz", 0.05)],
 };
 
+/** Contained mode (mobile / reduced-motion): the product framed centered in
+ * the hero box, front ¾, clamp legible. No scroll choreography — just this. */
+export const HERO_CONTAINED: Pick<StagePose, "camPos" | "camTarget"> = {
+  camPos: [-0.26, 0.2, -0.78],
+  camTarget: [0.04, 0.02, 0.06],
+};
+
 export function computePose(sceneId: number, progress: number): StagePose {
   switch (sceneId) {
     case 1: {

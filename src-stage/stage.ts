@@ -6,7 +6,12 @@ import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { MeshoptDecoder } from "three/examples/jsm/libs/meshopt_decoder.module.js";
 import { NODE } from "./nodes";
-import { ASSEMBLY_YAW, DESK_SHIFT, computePose } from "./poses";
+import {
+  ASSEMBLY_YAW,
+  DESK_SHIFT,
+  HERO_CONTAINED,
+  computePose,
+} from "./poses";
 import { buildRig, type Rig } from "./rig";
 import { makeNodes, playSequence, type Nodes } from "./sequences";
 import { state } from "./state";
@@ -14,9 +19,14 @@ import { modelUrl, type Tier } from "./tier";
 
 const DAMP = 5;
 
+export type StageMode = "film" | "contained";
+
 export type StageConfig = {
   modelBase: string;
   furLevel: "a" | "b" | "c";
+  mode: StageMode;
+  /** reduced-motion: render, but no idle breathing / no scrub */
+  reduced: boolean;
 };
 
 /** §3.5.6b — assign the mobile 4K fur_gray bake to desktop Basket Top. */
@@ -80,7 +90,12 @@ export async function initStage(
   tier: Exclude<Tier, "none">,
   onReady: () => void,
 ): Promise<Rig> {
-  const rig = buildRig(host);
+  const contained = cfg.mode === "contained";
+  const getSize = () =>
+    contained
+      ? { w: host.clientWidth || window.innerWidth, h: host.clientHeight || 360 }
+      : { w: window.innerWidth, h: window.innerHeight };
+  const rig = buildRig(host, getSize);
 
   const loader = new GLTFLoader();
   loader.setMeshoptDecoder(MeshoptDecoder);
@@ -107,10 +122,36 @@ export async function initStage(
   state.ready = true;
   onReady();
 
+  // Contained mode holds a fixed centred pose; film mode reads the scroll table.
+  if (contained) {
+    rig.camera.position.set(...HERO_CONTAINED.camPos);
+    targetVec.set(...HERO_CONTAINED.camTarget);
+    rig.key.intensity = 2.0;
+    rig.fill.intensity = 0.35;
+  }
+
   const clock = new THREE.Clock();
   function frame() {
     const delta = Math.min(clock.getDelta(), 0.1);
     const t = clock.elapsedTime;
+
+    if (contained) {
+      // static docked product, centred; gentle idle unless reduced-motion
+      rig.camera.lookAt(targetVec);
+      const root = nodes.get(NODE.root);
+      const rest = nodes.rest.get(NODE.root);
+      if (root && rest) {
+        root.quaternion.copy(rest.quaternion);
+        if (!cfg.reduced) {
+          const yaw = ((6 * Math.PI) / 180) * Math.sin((t / 6) * Math.PI * 2);
+          root.rotateY(yaw);
+        }
+      }
+      rig.renderer.render(rig.scene, rig.camera);
+      requestAnimationFrame(frame);
+      return;
+    }
+
     const pose = computePose(state.sceneId, state.progress);
 
     // camera + target damping (the weighted dolly)
@@ -162,9 +203,10 @@ export async function initStage(
   requestAnimationFrame(frame);
 
   window.addEventListener("resize", () => {
-    rig.camera.aspect = window.innerWidth / window.innerHeight;
+    const { w, h } = getSize();
+    rig.camera.aspect = w / h;
     rig.camera.updateProjectionMatrix();
-    rig.renderer.setSize(window.innerWidth, window.innerHeight);
+    rig.renderer.setSize(w, h);
   });
 
   return rig;
