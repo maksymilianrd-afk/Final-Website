@@ -9,10 +9,10 @@ export type Rig = {
   renderer: THREE.WebGLRenderer;
   scene: THREE.Scene;
   camera: THREE.PerspectiveCamera;
+  /** strong sun, almost overhead, pointing down (the Blender key) */
   key: THREE.DirectionalLight;
+  /** angled side sun raking across the basket */
   fill: THREE.DirectionalLight;
-  /** the fur/back light — rakes through the strands so their edges glow */
-  rim: THREE.DirectionalLight;
 };
 
 export function buildRig(
@@ -76,12 +76,6 @@ export function buildRig(
   fill.position.set(-4.5, 2.0, -1.2);
   scene.add(fill);
 
-  // FUR / back light — behind + above, rakes THROUGH the strands so their edges
-  // glow: the visual signature of "soft". +Z is the far side, behind the basket.
-  const rim = new THREE.DirectionalLight(0xffffff, 1.3); // was 1.6
-  rim.position.set(0.8, 2.4, 3.0);
-  scene.add(rim);
-
   // Shadow catcher — brought up so the shadow reads as CONTACT, not a cloud on
   // a distant floor (doc 13 Fix 2).
   const catcher = new THREE.Mesh(
@@ -93,5 +87,5 @@ export function buildRig(
   catcher.receiveShadow = true;
   scene.add(catcher);
 
-  return { renderer, scene, camera, key, fill, rim };
+  return { renderer, scene, camera, key, fill };
 }

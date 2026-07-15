@@ -38,17 +38,17 @@
   </div>
 
   {%- comment -%}
-    The hero's one charm beat: handwritten note + a long arrow whose HEAD lands
-    on the real star-knob (bound to the projected annotation_04 anchor in JS),
-    while the note + tail sit up-left in open space (doc 14 Part A).
+    The hero's one charm beat. The note is placed just BELOW the product's live
+    projected bounding box (so it's always OFF the fur, in open space) and a
+    connector line is drawn up to the real star-knob. Both driven in JS from the
+    3D — position + path + visibility (doc 14 Part A).
   {%- endcomment -%}
-  <span class="ink-annotation" data-reveal aria-hidden="true">
+  <span class="ink-annotation" aria-hidden="true">
     <span class="ink-annotation__note">hand-tight — no tools</span>
-    <svg viewBox="0 0 180 120" style="height:120px;width:180px;color:color-mix(in srgb,var(--ink) 70%,transparent)" fill="none">
-      <path class="ink-draw" style="--len:260;--dur:900ms;--delay:900ms" d="M8 10 C40 55, 100 92, 160 104" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path>
-      <path class="ink-draw" style="--len:48;--dur:250ms;--delay:1700ms" d="M146 108 C151 106, 156 105, 161 104 C157 100, 153 96, 150 92" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
-    </svg>
   </span>
+  <svg id="ink-connector" aria-hidden="true">
+    <path id="ink-connector-path" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+  </svg>
 
   <p class="hero__spec mono-label">HOLDS 22 KG &middot; FITS EDGES 20–75 MM &middot; WASHABLE</p>
 

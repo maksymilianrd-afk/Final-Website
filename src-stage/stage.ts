@@ -232,9 +232,18 @@ export async function initStage(
   // frames inside the hero box and has no such coupling.
   const REF_ASPECT = 16 / 9;
   const restCenter = new THREE.Vector3();
+  const bboxCorners: THREE.Vector3[] = [];
   {
     const rootObj = nodes.get(NODE.root);
-    if (rootObj) new THREE.Box3().setFromObject(rootObj).getCenter(restCenter);
+    if (rootObj) {
+      const b = new THREE.Box3().setFromObject(rootObj);
+      b.getCenter(restCenter);
+      // the 8 corners, for projecting the product's screen bounds each frame
+      for (const x of [b.min.x, b.max.x])
+        for (const y of [b.min.y, b.max.y])
+          for (const z of [b.min.z, b.max.z])
+            bboxCorners.push(new THREE.Vector3(x, y, z));
+    }
   }
   const probe = new THREE.PerspectiveCamera(qp("fov", 28), REF_ASPECT, 0.01, 20);
   const screenFracX = (aspect: number): number => {
@@ -303,8 +312,10 @@ export async function initStage(
   const clock = new THREE.Clock();
   let lastOpacity = "1";
   const annoVec = new THREE.Vector3();
+  const cornerVec = new THREE.Vector3();
   const docEl = document.documentElement;
   const annoEl = document.querySelector<HTMLElement>(".ink-annotation");
+  const connectorPath = document.getElementById("ink-connector-path");
   function frame() {
     const delta = Math.min(clock.getDelta(), 0.1);
     const t = clock.elapsedTime;
@@ -338,7 +349,6 @@ export async function initStage(
     const lit = Math.max(pose.light, 0.12);
     rig.key.intensity = THREE.MathUtils.damp(rig.key.intensity, 2.6 * pose.light, DAMP, delta);
     rig.fill.intensity = THREE.MathUtils.damp(rig.fill.intensity, 1.6 * Math.max(pose.light, 0.3), DAMP, delta);
-    rig.rim.intensity = THREE.MathUtils.damp(rig.rim.intensity, 1.3 * lit, DAMP, delta);
     rig.scene.environmentIntensity = THREE.MathUtils.damp(rig.scene.environmentIntensity, 1.15 * lit, DAMP, delta);
 
     // sequence state
@@ -385,25 +395,55 @@ export async function initStage(
     // from the composition binding is baked into camera.project, so these land
     // exactly where the product is drawn.
     let knobInFront = false;
+    let knobX = 0;
+    let knobY = 0;
     for (let i = 1; i <= 4; i++) {
       const anchor = nodes.get(`annotation_0${i}`);
       if (!anchor) continue;
       anchor.getWorldPosition(annoVec);
       annoVec.project(rig.camera);
       const inFront = annoVec.z < 1;
-      docEl.style.setProperty(`--anno${i}-x`, `${(annoVec.x * 0.5 + 0.5) * window.innerWidth}px`);
-      docEl.style.setProperty(`--anno${i}-y`, `${(-annoVec.y * 0.5 + 0.5) * window.innerHeight}px`);
+      const sx = (annoVec.x * 0.5 + 0.5) * window.innerWidth;
+      const sy = (-annoVec.y * 0.5 + 0.5) * window.innerHeight;
+      docEl.style.setProperty(`--anno${i}-x`, `${sx}px`);
+      docEl.style.setProperty(`--anno${i}-y`, `${sy}px`);
       docEl.style.setProperty(`--anno${i}-on`, inFront ? "1" : "0");
-      if (i === 4) knobInFront = inFront;
+      if (i === 4) {
+        knobInFront = inFront;
+        knobX = sx;
+        knobY = sy;
+      }
     }
-    // The hero arrow appears only when the star-knob (anno4) is a real,
-    // front-facing point and the hero product is actually on screen — never
-    // over a placeholder, and never mid-scroll into another scene (doc 14).
-    if (annoEl) {
-      const ready =
-        state.sceneId === 1 && pose.canvasOpacity > 0.9 && knobInFront;
-      annoEl.dataset.annoReady = ready ? "1" : "0";
+    // The hero note: shown only when the star-knob is a real, front-facing point
+    // and the hero product is on screen (never over a placeholder or mid-scroll,
+    // doc 14). Placed just BELOW the product's projected bounding box so it can
+    // never land on the fur; a connector line is drawn up to the knob.
+    const annoReady =
+      state.sceneId === 1 &&
+      pose.canvasOpacity > 0.9 &&
+      knobInFront &&
+      bboxCorners.length > 0;
+    if (annoReady && connectorPath) {
+      let maxY = -Infinity;
+      for (const corner of bboxCorners) {
+        cornerVec.copy(corner).project(rig.camera);
+        const sy = (-cornerVec.y * 0.5 + 0.5) * window.innerHeight;
+        if (sy > maxY) maxY = sy;
+      }
+      const noteY = Math.min(maxY + 30, window.innerHeight - 84);
+      const noteX = Math.max(20, Math.min(knobX - 70, window.innerWidth - 190));
+      docEl.style.setProperty("--note-x", `${noteX}px`);
+      docEl.style.setProperty("--note-y", `${noteY}px`);
+      const sX = noteX + 34;
+      const sY = noteY - 6;
+      const midY = (sY + knobY) / 2;
+      connectorPath.setAttribute(
+        "d",
+        `M ${sX} ${sY} C ${sX} ${midY}, ${knobX} ${midY}, ${knobX} ${knobY} ` +
+          `M ${knobX - 7} ${knobY + 12} L ${knobX} ${knobY} L ${knobX + 7} ${knobY + 12}`,
+      );
     }
+    document.body.classList.toggle("dp-anno-on", annoReady);
 
     // hand-off: the product features in 1–4/9/11 and fades to the DOM media in
     // the content scenes. Set the target only on change; the #dp-canvas CSS

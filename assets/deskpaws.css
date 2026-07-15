@@ -493,37 +493,41 @@ body.dp-stage-on .scene-surface {
   color: var(--ink);
   overflow: visible;
 }
+/* The note sits just BELOW the product's live projected bounding box (JS sets
+   --note-x/y), so it can never land on the fur. #ink-connector is a
+   full-viewport overlay whose path JS draws up to the star-knob. Both are shown
+   only once the stage is live and the knob is a real on-screen point in the
+   hero (body.dp-anno-on, set in JS) — never over a placeholder or mid-scroll. */
 .ink-annotation {
-  position: absolute;
-  left: 62%;
-  top: 47%;
+  position: fixed;
+  left: var(--note-x, 62%);
+  top: var(--note-y, 60%);
   display: none;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 0.25rem;
   pointer-events: none;
-  /* doc 14 Stage 1: never show the arrow until there's a real knob to point at
-     — no more floating on the beige / over the placeholder box. */
+  opacity: 0;
+  transition: opacity 0.6s ease;
+  z-index: 31;
+}
+#ink-connector {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  display: none;
+  pointer-events: none;
+  z-index: 30;
+  color: color-mix(in srgb, var(--ink) 62%, transparent);
   opacity: 0;
   transition: opacity 0.6s ease;
 }
 @media (min-width: 1024px) {
-  .ink-annotation {
-    display: flex;
+  .ink-annotation,
+  #ink-connector {
+    display: block;
   }
 }
-/* The note pins to the projected star-knob anchor (--anno4). The translate
-   lands the arrow's HEAD on the knob while the note + tail sit up-left in open
-   space, OUTSIDE the product. Shown only once the stage is live and the knob is
-   a real front-facing point in the hero (data-anno-ready, set in JS). */
-body.dp-stage-on .ink-annotation {
-  position: fixed;
-  left: var(--anno4-x, 62%);
-  top: var(--anno4-y, 47%);
-  transform: translate(-160px, -124px);
-  z-index: 30;
-}
-body.dp-stage-on .ink-annotation[data-anno-ready="1"] {
+body.dp-anno-on .ink-annotation,
+body.dp-anno-on #ink-connector {
   opacity: 1;
 }
 .ink-annotation__note {

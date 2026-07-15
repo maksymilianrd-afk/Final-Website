@@ -63,12 +63,12 @@ const seg = (t: number, a: number, b: number) =>
  * legible toward camera, desk anchored right, basket cantilevering left
  * toward the headline — text ≤46vw, basket left extent ≥48vw (§3.5.5). */
 export const HERO: Pick<StagePose, "camPos" | "camTarget"> = {
-  // Big product (fov ~28), but aimed right (tx) so the basket sits LEFT of
-  // centre and the desk edge it clamps to enters from the right — the product
-  // story is the clamp-on-desk, not the basket alone (doc 14). Pulled back a
-  // touch (cz) to fit the desk. Tune live with ?tx / ?cz / ?cx / ?fov.
-  camPos: [qp("cx", 0.4), qp("cy", 0.33), qp("cz", -0.95)],
-  camTarget: [qp("tx", 0.22), qp("ty", -0.03), qp("tz", 0.08)],
+  // Product sits LEFT of centre (~42% of width) with the desk it clamps to
+  // filling the right of the frame — both read at once. NOTE the handedness:
+  // LOWER tx moves the product LEFT (verified by projection). Tune live with
+  // ?tx (lower = further left) / ?cz (more negative = pulled back) / ?fov.
+  camPos: [qp("cx", 0.35), qp("cy", 0.34), qp("cz", -1.7)],
+  camTarget: [qp("tx", -0.08), qp("ty", -0.02), qp("tz", 0.06)],
 };
 
 /** Contained mode (mobile / reduced-motion): the product framed centered in
@@ -85,8 +85,8 @@ export function computePose(sceneId: number, progress: number): StagePose {
       // tumbles forward; the night dip belongs to Scene 02.
       const p = progress;
       return {
-        camPos: l3(HERO.camPos, [0.38, 0.42, -1.35], p),
-        camTarget: l3(HERO.camTarget, [-0.02, -0.02, 0.05], p),
+        camPos: l3(HERO.camPos, [0.42, 0.46, -2.1], p),
+        camTarget: l3(HERO.camTarget, [-0.1, -0.02, 0.05], p),
         light: lerp(1, 0.7, p),
         deskX: -1.2 * seg(p, 0.05, 0.6),
         tumble: -0.85 * seg(p, 0.15, 1),
