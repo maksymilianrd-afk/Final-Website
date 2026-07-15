@@ -88,26 +88,24 @@ function prepare(scene: THREE.Object3D, renderer: THREE.WebGLRenderer): void {
       if (t) t.anisotropy = maxAniso;
     }
 
-    // Plush fabric (basket top + fur cards): convert to physical so we can add
-    // sheen — the soft grazing-angle glow three.js added specifically for
-    // fabric. This is the difference between "grey plastic bowl" and "plush".
+    // Plush fabric (basket top + fur cards). The big fur wins — ambient rig,
+    // rim light (rig.ts) and alphaToCoverage — all live on the standard
+    // material, no risky physical conversion. alphaToCoverage routes the alpha
+    // test through the multisample buffer → soft, anti-aliased strand edges.
+    // (Fabric SHEEN, doc 13's optional "last 10%", is deferred: upgrading to
+    // MeshPhysicalMaterial is what crashed the stage, so it stays out until it
+    // can be verified in a browser.)
     if (mesh.name === NODE.top || mesh.name === NODE.fur) {
-      const phys = new THREE.MeshPhysicalMaterial();
-      phys.copy(mat);
-      phys.metalness = 0;
-      phys.roughness = 1.0;
-      phys.envMapIntensity = 1.3; // fur drinks ambient light — let it
-      phys.sheen = 1.0;
-      phys.sheenRoughness = 0.85;
-      phys.sheenColor = new THREE.Color(0xffffff);
+      mat.metalness = 0;
+      mat.roughness = 1.0;
+      mat.envMapIntensity = 1.3; // fur drinks ambient light — let it
       if (mesh.name === NODE.fur) {
-        phys.alphaToCoverage = true; // soft strand edges — the single most important line
-        phys.alphaTest = 0.28; // kills the faint fringe halo; A2C keeps it soft
-        phys.transparent = false; // keep MASK — never BLEND (sorting artifacts)
-        phys.side = THREE.DoubleSide;
+        mat.alphaToCoverage = true; // soft strand edges — the single most important line
+        mat.alphaTest = 0.28; // kills the faint fringe halo; A2C keeps it soft
+        mat.transparent = false; // keep MASK — never BLEND (sorting artifacts)
+        mat.side = THREE.DoubleSide;
       }
-      mesh.material = phys;
-      phys.needsUpdate = true;
+      mat.needsUpdate = true;
       return;
     }
 
