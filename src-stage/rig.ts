@@ -28,7 +28,7 @@ export function buildRig(
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   renderer.setSize(w, h);
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.0; // was 1.05 — the brighter ambient compensates
+  renderer.toneMappingExposure = 1.08; // brighter, closer to the EEVEE reference
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -49,35 +49,37 @@ export function buildRig(
   const camera = new THREE.PerspectiveCamera(qp("fov", 28), w / h, 0.01, 20);
   camera.position.set(0.26, 0.3, -0.78);
 
-  // Warm key — now a shaper, not a hammer (doc 13 Fix 1).
-  const key = new THREE.DirectionalLight(0xfff4e8, 1.25); // was 2.0
-  key.position.set(-2.5, 3.5, -2.5);
+  // KEY — a strong sun almost directly overhead, pointing down (doc 14: the
+  // Blender setup Max lit it with). Casts the contact shadow under the basket.
+  const key = new THREE.DirectionalLight(0xfff6ee, 2.6); // was 1.25 — now the sun
+  key.position.set(0.5, 6.0, -0.5); // high overhead, a touch toward camera-front
   key.castShadow = true;
   key.shadow.mapSize.set(2048, 2048);
-  key.shadow.radius = 3; // was 6 — tighter, less mush
+  key.shadow.radius = 3;
   key.shadow.bias = -0.0002;
   key.shadow.normalBias = 0.02;
   const c = key.shadow.camera as THREE.OrthographicCamera;
-  c.left = -0.55; // tightened so the depth map isn't wasted on empty space
-  c.right = 0.55;
-  c.top = 0.55;
-  c.bottom = -0.55;
+  c.left = -0.7; // widened for the bigger product
+  c.right = 0.7;
+  c.top = 0.7;
+  c.bottom = -0.7;
   c.near = 1.0;
-  c.far = 7;
+  c.far = 9; // the key now sits at y=6
   c.updateProjectionMatrix();
   scene.add(key);
   scene.add(key.target);
 
-  // Cool-neutral fill from camera-right, no shadow (§3.5.1)
-  const fill = new THREE.DirectionalLight(0xeef0f3, 0.45); // was 0.35
-  fill.position.set(2.2, 0.9, -1.6);
+  // SIDE SUN — the second Blender sun, angled low from camera-left so its beams
+  // rake ACROSS the side of the basket, catching the fur and defining form. No
+  // shadow (avoids a competing second shadow).
+  const fill = new THREE.DirectionalLight(0xfff2e6, 1.6); // was 0.45
+  fill.position.set(-4.5, 2.0, -1.2);
   scene.add(fill);
 
-  // THE FUR LIGHT (doc 13 Fix 1) — behind + above, aimed back toward camera.
-  // Rakes THROUGH the strands so their edges glow: the whole visual signature
-  // of "soft". This is what was missing. +Z is the far side, behind the basket.
-  const rim = new THREE.DirectionalLight(0xffffff, 1.6);
-  rim.position.set(0.6, 2.2, 2.8);
+  // FUR / back light — behind + above, rakes THROUGH the strands so their edges
+  // glow: the visual signature of "soft". +Z is the far side, behind the basket.
+  const rim = new THREE.DirectionalLight(0xffffff, 1.3); // was 1.6
+  rim.position.set(0.8, 2.4, 3.0);
   scene.add(rim);
 
   // Shadow catcher — brought up so the shadow reads as CONTACT, not a cloud on

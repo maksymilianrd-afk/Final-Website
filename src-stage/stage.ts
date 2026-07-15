@@ -187,7 +187,15 @@ export async function initStage(
 
   const loader = new GLTFLoader();
   loader.setMeshoptDecoder(MeshoptDecoder);
-  const gltf = await loader.loadAsync(modelUrl(cfg.modelBase, tier));
+  const dpLoad = (window as unknown as { __dpLoad?: (p: number) => void })
+    .__dpLoad;
+  const gltf = await loader.loadAsync(
+    modelUrl(cfg.modelBase, tier),
+    (e: ProgressEvent) => {
+      // real byte progress for the big GLB → the loader bar (0.45 → 0.95)
+      if (e.total) dpLoad?.(0.45 + 0.5 * (e.loaded / e.total));
+    },
+  );
   const model = gltf.scene;
 
   prepare(model, rig.renderer);
@@ -264,10 +272,10 @@ export async function initStage(
     rig.camera.position.set(...HERO_CONTAINED.camPos);
     targetVec.set(...HERO_CONTAINED.camTarget);
     rig.camera.lookAt(targetVec);
-    // ambient-dominant, matching the rig (doc 13 Fix 1) so the phone hero fur
-    // reads as plush, not static.
-    rig.key.intensity = 1.25;
-    rig.fill.intensity = 0.45;
+    // match the rig's Blender-style key + side sun so the phone hero fur reads
+    // plush and sculpted, not flat.
+    rig.key.intensity = 2.6;
+    rig.fill.intensity = 1.6;
 
     // touch / drag to spin the whole still-life
     const canvas = rig.renderer.domElement;
@@ -294,9 +302,9 @@ export async function initStage(
 
   const clock = new THREE.Clock();
   let lastOpacity = "1";
-  let lastScene = 0;
   const annoVec = new THREE.Vector3();
   const docEl = document.documentElement;
+  const annoEl = document.querySelector<HTMLElement>(".ink-annotation");
   function frame() {
     const delta = Math.min(clock.getDelta(), 0.1);
     const t = clock.elapsedTime;
@@ -328,9 +336,9 @@ export async function initStage(
     // black background). A 0.12 floor leaves a shape in the dark, not a void
     // (doc 13 Fix 5).
     const lit = Math.max(pose.light, 0.12);
-    rig.key.intensity = THREE.MathUtils.damp(rig.key.intensity, 1.25 * pose.light, DAMP, delta);
-    rig.fill.intensity = THREE.MathUtils.damp(rig.fill.intensity, 0.45 * Math.max(pose.light, 0.3), DAMP, delta);
-    rig.rim.intensity = THREE.MathUtils.damp(rig.rim.intensity, 1.6 * lit, DAMP, delta);
+    rig.key.intensity = THREE.MathUtils.damp(rig.key.intensity, 2.6 * pose.light, DAMP, delta);
+    rig.fill.intensity = THREE.MathUtils.damp(rig.fill.intensity, 1.6 * Math.max(pose.light, 0.3), DAMP, delta);
+    rig.rim.intensity = THREE.MathUtils.damp(rig.rim.intensity, 1.3 * lit, DAMP, delta);
     rig.scene.environmentIntensity = THREE.MathUtils.damp(rig.scene.environmentIntensity, 1.15 * lit, DAMP, delta);
 
     // sequence state
@@ -376,18 +384,25 @@ export async function initStage(
     // angle or width. anno4 = the star knob, the hero arrow's target. The pan
     // from the composition binding is baked into camera.project, so these land
     // exactly where the product is drawn.
+    let knobInFront = false;
     for (let i = 1; i <= 4; i++) {
       const anchor = nodes.get(`annotation_0${i}`);
       if (!anchor) continue;
       anchor.getWorldPosition(annoVec);
       annoVec.project(rig.camera);
+      const inFront = annoVec.z < 1;
       docEl.style.setProperty(`--anno${i}-x`, `${(annoVec.x * 0.5 + 0.5) * window.innerWidth}px`);
       docEl.style.setProperty(`--anno${i}-y`, `${(-annoVec.y * 0.5 + 0.5) * window.innerHeight}px`);
-      docEl.style.setProperty(`--anno${i}-on`, annoVec.z < 1 ? "1" : "0");
+      docEl.style.setProperty(`--anno${i}-on`, inFront ? "1" : "0");
+      if (i === 4) knobInFront = inFront;
     }
-    if (state.sceneId !== lastScene) {
-      document.body.dataset.scene = String(state.sceneId);
-      lastScene = state.sceneId;
+    // The hero arrow appears only when the star-knob (anno4) is a real,
+    // front-facing point and the hero product is actually on screen — never
+    // over a placeholder, and never mid-scroll into another scene (doc 14).
+    if (annoEl) {
+      const ready =
+        state.sceneId === 1 && pose.canvasOpacity > 0.9 && knobInFront;
+      annoEl.dataset.annoReady = ready ? "1" : "0";
     }
 
     // hand-off: the product features in 1–4/9/11 and fades to the DOM media in

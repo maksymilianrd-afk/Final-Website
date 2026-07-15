@@ -63,10 +63,12 @@ const seg = (t: number, a: number, b: number) =>
  * legible toward camera, desk anchored right, basket cantilevering left
  * toward the headline — text ≤46vw, basket left extent ≥48vw (§3.5.5). */
 export const HERO: Pick<StagePose, "camPos" | "camTarget"> = {
-  // Closer + a longer lens (fov ~28 in rig) so the product dominates the frame
-  // — Apple/Dyson/Oryzo scale (doc 13 Fix 4). Tune live with ?cz / ?fov.
-  camPos: [qp("cx", 0.26), qp("cy", 0.3), qp("cz", -0.78)],
-  camTarget: [qp("tx", 0.07), qp("ty", -0.03), qp("tz", 0.05)],
+  // Big product (fov ~28), but aimed right (tx) so the basket sits LEFT of
+  // centre and the desk edge it clamps to enters from the right — the product
+  // story is the clamp-on-desk, not the basket alone (doc 14). Pulled back a
+  // touch (cz) to fit the desk. Tune live with ?tx / ?cz / ?cx / ?fov.
+  camPos: [qp("cx", 0.4), qp("cy", 0.33), qp("cz", -0.95)],
+  camTarget: [qp("tx", 0.22), qp("ty", -0.03), qp("tz", 0.08)],
 };
 
 /** Contained mode (mobile / reduced-motion): the product framed centered in

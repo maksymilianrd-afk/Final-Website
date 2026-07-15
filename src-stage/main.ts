@@ -16,24 +16,34 @@ type Config = {
   variantId?: number | null;
 };
 
+const loaderApi = window as unknown as {
+  __dpLoad?: (p: number) => void;
+  __dpLoadDone?: () => void;
+};
+/** Dismiss the loading veil whenever the stage won't (or can't) render, so a
+ * disabled/no-WebGL/failed stage never traps the visitor behind it. */
+const dismissLoader = () => loaderApi.__dpLoadDone?.();
+
 function boot(): void {
   const cfgEl = document.getElementById("dp-config");
   const fixedHost = document.getElementById("dp-canvas");
   const bg = document.getElementById("dp-bg");
   const heroBox = document.querySelector<HTMLElement>('[data-dp-stage="hero"]');
-  if (!cfgEl || !fixedHost || !bg) return;
+  if (!cfgEl || !fixedHost || !bg) return dismissLoader();
 
   let cfg: Config;
   try {
     cfg = JSON.parse(cfgEl.textContent || "{}");
   } catch {
-    return;
+    return dismissLoader();
   }
-  if (!cfg.modelBase) return;
-  if (cfgEl.getAttribute("data-enable-stage") === "false") return;
+  if (!cfg.modelBase) return dismissLoader();
+  if (cfgEl.getAttribute("data-enable-stage") === "false") return dismissLoader();
 
   const tier = pickTier();
-  if (tier === "none") return; // poster-only, no WebGL
+  if (tier === "none") return dismissLoader(); // poster-only, no WebGL
+
+  loaderApi.__dpLoad?.(0.45); // stage bundle parsed, loader created
 
   const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const narrow = window.innerWidth < 1024 || window.innerHeight > window.innerWidth;
@@ -53,6 +63,7 @@ function boot(): void {
   }
 
   const onReady = () => {
+    loaderApi.__dpLoad?.(1); // first frame is ready — fade the veil over the pop
     if (mode === "film") {
       document.body.classList.add("dp-stage-on");
       // Fade the placeholder posters for every scene the 3D product features
@@ -87,6 +98,7 @@ function boot(): void {
     // On any stage failure the static cut remains fully intact.
     console.warn("[deskpaws] stage unavailable:", err);
     state.ready = false;
+    dismissLoader();
   });
 }
 

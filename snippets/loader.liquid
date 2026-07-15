@@ -1,0 +1,47 @@
+{%- comment -%}
+  The Draw-On loading veil (doc 14 Part B). Shown first, removed on ready.
+  JS-gated (never shown to no-JS visitors, who get the content directly).
+  The cat-line mark draws itself; a hairline bar tracks REAL load progress.
+  Fades only once the stage's first frame is rendered — covering the 3D pop —
+  but can never trap anyone: it also fades on stage-disabled / failure / a cap.
+{%- endcomment -%}
+<div id="dp-loader" aria-hidden="true">
+  <div class="dp-loader__mark">
+    <svg class="dp-loader__cat" viewBox="0 0 64 28" fill="none" aria-hidden="true">
+      <path pathLength="1"
+        d="M2 6 C4 18, 26 22, 38 14 C42 11.5, 44 8.5, 45 6 L62 6 M52 6 L52 14 M46 14 L52 14 M49 14 L49 24 M45.5 24 L52.5 24"
+        stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+    </svg>
+    <span class="dp-loader__word">DESKPAWS</span>
+    <div class="dp-loader__bar"><i></i></div>
+  </div>
+</div>
+<script>
+  (function () {
+    var loader = document.getElementById("dp-loader");
+    if (!loader) return;
+    var p = 0, finished = false;
+    function set(to) {
+      p = Math.max(p, Math.min(1, to));
+      document.documentElement.style.setProperty("--load", String(p));
+      if (p >= 1) done();
+    }
+    function done() {
+      if (finished) return;
+      finished = true;
+      loader.classList.add("is-done");
+      setTimeout(function () {
+        if (loader && loader.parentNode) loader.parentNode.removeChild(loader);
+      }, 700);
+    }
+    // exposed for the stage bundle to drive with real progress
+    window.__dpLoad = set;
+    window.__dpLoadDone = done;
+    document.addEventListener("DOMContentLoaded", function () { set(0.25); });
+    // window load bumps progress but does NOT dismiss — the big GLB may still be
+    // loading after the page's own assets are done.
+    window.addEventListener("load", function () { set(Math.max(p, 0.55)); });
+    // ultimate safety net: never trap the visitor, even if the stage never readies.
+    setTimeout(function () { if (!finished) done(); }, 5000);
+  })();
+</script>

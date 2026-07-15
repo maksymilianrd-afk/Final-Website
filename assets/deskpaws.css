@@ -192,6 +192,91 @@ body.dp-stage-on .scene-surface {
   background-color: transparent !important;
 }
 
+/* ── The Draw-On loading veil (doc 14 Part B) ──────────────────────────── */
+#dp-loader {
+  display: none;
+}
+.js #dp-loader {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  background:
+    radial-gradient(
+      ellipse 90% 70% at 20% 12%,
+      rgba(255, 243, 226, 0.5),
+      rgba(255, 243, 226, 0.12) 45%,
+      transparent 70%
+    ),
+    var(--bone);
+  transition: opacity 0.6s ease;
+}
+#dp-loader.is-done {
+  opacity: 0;
+  pointer-events: none;
+}
+.dp-loader__mark {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.25rem;
+}
+.dp-loader__cat {
+  height: 3rem;
+  width: auto;
+  color: var(--ink);
+}
+.dp-loader__cat path {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: dp-loader-draw 1.1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+@keyframes dp-loader-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+.dp-loader__word {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: 0.35em;
+  padding-left: 0.35em;
+  font-size: 0.95rem;
+  color: var(--ink);
+  opacity: 0;
+  animation: dp-loader-word 0.6s ease 0.5s forwards;
+}
+@keyframes dp-loader-word {
+  to {
+    opacity: 0.85;
+  }
+}
+.dp-loader__bar {
+  width: 180px;
+  height: 1px;
+  background: var(--plush);
+  overflow: hidden;
+}
+.dp-loader__bar i {
+  display: block;
+  height: 100%;
+  background: var(--ink);
+  transform-origin: left;
+  transform: scaleX(var(--load, 0));
+  transition: transform 0.3s ease;
+}
+@media (prefers-reduced-motion: reduce) {
+  .dp-loader__cat path {
+    animation: none;
+    stroke-dashoffset: 0;
+  }
+  .dp-loader__word {
+    animation: none;
+    opacity: 0.85;
+  }
+}
+
 /* ── Grain + atmosphere (§1.1 / §1.6) ──────────────────────────────────── */
 .grain-layer::after {
   content: "";
@@ -410,35 +495,36 @@ body.dp-stage-on .scene-surface {
 }
 .ink-annotation {
   position: absolute;
-  left: 62%; /* static fallback (no-JS / no-WebGL) */
+  left: 62%;
   top: 47%;
   display: none;
   flex-direction: column;
   align-items: flex-start;
   gap: 0.25rem;
   pointer-events: none;
+  /* doc 14 Stage 1: never show the arrow until there's a real knob to point at
+     — no more floating on the beige / over the placeholder box. */
+  opacity: 0;
+  transition: opacity 0.6s ease;
 }
 @media (min-width: 1024px) {
   .ink-annotation {
     display: flex;
   }
 }
-/* Fix 3 — when the live stage is on, the note pins to the projected star-knob
-   anchor (--anno4) so the arrow always points AT the knob from outside the
-   product, at any width or camera angle. The translate lands the arrow tip on
-   the anchor; the note floats up-left of it. Gated to the hero scene so it
-   doesn't drift over later sections. */
+/* The note pins to the projected star-knob anchor (--anno4). The translate
+   lands the arrow's HEAD on the knob while the note + tail sit up-left in open
+   space, OUTSIDE the product. Shown only once the stage is live and the knob is
+   a real front-facing point in the hero (data-anno-ready, set in JS). */
 body.dp-stage-on .ink-annotation {
   position: fixed;
   left: var(--anno4-x, 62%);
   top: var(--anno4-y, 47%);
-  transform: translate(-100px, -76px);
-  opacity: 0;
-  transition: opacity 0.3s ease;
+  transform: translate(-160px, -124px);
   z-index: 30;
 }
-body.dp-stage-on[data-scene="1"] .ink-annotation {
-  opacity: var(--anno4-on, 0);
+body.dp-stage-on .ink-annotation[data-anno-ready="1"] {
+  opacity: 1;
 }
 .ink-annotation__note {
   font-family: var(--font-ink);

@@ -53,6 +53,7 @@
   </head>
 
   <body class="grain-layer template-{{ request.page_type | handle }}">
+    {% render 'loader' %}
     <a class="skip-link" href="#product-cta">Skip to buy</a>
 
     {%- comment -%} The persistent stage layers (progressive enhancement) {%- endcomment -%}
